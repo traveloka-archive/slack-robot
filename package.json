@@ -7,7 +7,7 @@
     "test": "mocha --compilers js:babel/register tests/**/**/*.js",
     "coverage": "istanbul cover _mocha tests/**/*.js -- --compilers js:babel/register",
     "coveralls": "istanbul cover _mocha tests/**/*.js --report lcovonly -- --compilers js:babel/register && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage",
-    "prepublish": "babel -d src/ lib/"
+    "prepublish": "babel -d src/ lib/ && mkdir -p action && cp src/BaseAction.js action/"
   },
   "repository": {
     "type": "git",
