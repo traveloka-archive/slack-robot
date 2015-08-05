@@ -2,7 +2,7 @@ import chai from 'chai';
 import sinon from 'sinon';
 import sinon_chai from 'sinon-chai';
 import chai_as_promised from 'chai-as-promised';
-import BaseAction from '../action/BaseAction';
+import BaseAction from '../lib/BaseAction';
 
 chai.use(sinon_chai);
 chai.use(chai_as_promised);

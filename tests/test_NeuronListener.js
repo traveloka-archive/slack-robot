@@ -2,7 +2,7 @@ import chai from 'chai';
 import sinon from 'sinon';
 import sinon_chai from 'sinon-chai';
 import chai_as_promised from 'chai-as-promised';
-import BaseAction from '../action/BaseAction';
+import BaseAction from '../lib/BaseAction';
 import NeuronListener from '../lib/NeuronListener';
 
 chai.use(sinon_chai);
@@ -149,7 +149,7 @@ describe('src/robot/NeuronListener', () => {
     response.allowed.should.be.equal(true);
   });
 
-  it('should be send payload, robot instance, and action instance to ACL', () => {
+  it('should be send payload and action instance to ACL', () => {
     var messageFormat = 'command without :acl([a-z]+)';
     var message = { text: 'command without acl' };
     var user = {};
@@ -157,7 +157,8 @@ describe('src/robot/NeuronListener', () => {
     var aclFn = sinon.stub().returns(true);
     var param = {acl: 'acl'};
     var messagePayload = {message, user, channel, param};
-    var action = new FakeAction(robot);
+    var action = new BaseAction(robot);
+    action.messagePayload = messagePayload;
 
     var neuronListener = new NeuronListener(robot, messageFormat);
     neuronListener.acl(aclFn);
