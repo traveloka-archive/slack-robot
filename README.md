@@ -123,12 +123,12 @@ execute() {
 
 ## Automatic help generator
 
-slack-robot comes with built-in help generator based on information you specify when attaching listener. Help message will be sent to you via direct message by the bot (even if you ask for them in channel/group). Make sure you also write description for your command (if not, it will be hidden from help message)
+slack-robot comes with built-in help generator based on information you specify when attaching listener. Help message will be sent to you via direct message by the bot (even if you ask for them in channel/group). **Make sure you also write description for your command (if not, it will be hidden from help message)**
 
-```
+```js
 robot.listen('push :branch([a-Z/\-]+) to :env(production|staging)')
 .desc('Deploy specific branch to production or staging servers')
-.action(deploy);
+.handler(deploy);
 ```
 
 To see help message, simply say `help` or `show help`. Help message then will be sent to you via DM
@@ -143,35 +143,35 @@ Example:
 
 - Reply to message (either from channel, group, or DM):
 
-  **`.reply(response : SlackResponseObject) : Promise`**
+  `.reply(response : SlackResponseObject) : Promise`
 
 - Syntactic sugar to reply only text:
 
-  **`.replyText(message : string) : Promise`**
+  `.replyText(message : string) : Promise`
 
 - Reply via direct message **(even if the message is sent on channel/group)**:
 
-  **`.replyDM(response : SlackResponseObject) : Promise`**
+  `.replyDM(response : SlackResponseObject) : Promise`
 
 - Syntactic sugar to reply text via DM
 
-  **`.replyTextDM(message : string) : Promise`**
+  `.replyTextDM(message : string) : Promise`
 
 - Send message to specific channel:
 
-  **`.sendTo(channelName : string, response : SlackResponseObject) : Promise`**
+  `.sendTo(channelName : string, response : SlackResponseObject) : Promise`
 
 - Syntactic sugar to send only text to specific channel:
 
-  **`.sendTextTo(channelName : string, message : string) : Promise`**
+  `.sendTextTo(channelName : string, message : string) : Promise`
 
 - Format the username so that slack will recognize as mention. **Leading @ character is optional.**:
 
-  **`.mentionUser(userName : string) : string`**
+  `.mentionUser(userName : string) : string`
 
 - Format channel name so that slack will recognize as mention. **Leading # character is optional.**:
 
-  **`.mentionChannel(channelName : string) : string`**
+  `.mentionChannel(channelName : string) : string`
 
 ## ACL
 
@@ -182,7 +182,7 @@ This callback will be executed with two arguments: `messagePayload`, and `action
 
 ```js
 robot.listen('push to production')
-.acl(function(messagePayload, robot, action) {
+.acl(function(messagePayload, action) {
   if (messagePayload.channel.name !== 'release-channel') {
     action.replyText(`Please send this command in ${this.mentionChannel('release-channel')}`)
     return false;
@@ -194,6 +194,16 @@ robot.listen('push to production')
 ```
 
 **Note:** Returning `false` in ACL callback doesn't make robot respond anything to user, it just ignore the command. Make sure you use `action` object to respond before returning `false` to notify the user that his command will be ignored because of ACL.
+
+## Brain
+
+slack-robot also have simple immutable in-memory key-value store using [imstore](https://github.com/pveyes/imstore). To access it simply call imstore API via `robot.brain`.
+
+Example:
+```js
+robot.brain.set('info', {running: false});
+console.log(robot.brain.get('info')) // {running: false}
+```
 
 ## License
 
