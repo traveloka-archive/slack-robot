@@ -1,8 +1,8 @@
 {
   "name": "slack-robot",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Simple robot for your slack integration",
-  "main": "lib/Robot.js",
+  "main": "src/Robot.js",
   "scripts": {
     "test": "mocha --compilers js:babel/register tests/**/**/*.js",
     "coverage": "istanbul cover _mocha tests/**/*.js -- --compilers js:babel/register",
