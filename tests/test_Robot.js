@@ -150,13 +150,14 @@ describe('lib/robot', function() {
   });
 
   it('should ignore message without mention by default', () => {
-    var message = {text: 'test message', user: 'y', channel: 'r'};
+    var message = {text: 'test message', user: 'y', channel: 'r', getChannelType: sinon.stub() };
     var userMock = {id: 'y', name: 'y-men'};
     var channelMock = {id: 'r', name: 'release'};
 
     var handleSpy = sinon.spy(Robot.prototype, 'handle_');
     var loggerStub = sinon.stub(Log.prototype, 'info');
 
+    message.getChannelType.returns('channel');
     slackEventStub.withArgs('loggedIn').callsArgWith(1, botInfo);
     slackEventStub.withArgs('message').callsArgWith(1, message);
     slackGetUserStub.withArgs(userMock.id).returns(userMock);
@@ -171,13 +172,14 @@ describe('lib/robot', function() {
   });
 
   it('should not ignore message without mention if such option is specified', () => {
-    var message = {text: 'send link', user: 'y', channel: 'r'};
+    var message = {text: 'send link', user: 'y', channel: 'r', getChannelType: sinon.stub() };
     var userMock = {id: 'y', name: 'y-men'};
     var channelMock = {id: 'r', name: 'release'};
 
     var handleSpy = sinon.spy(Robot.prototype, 'handle_');
     var loggerStub = sinon.stub(Log.prototype, 'info');
 
+    message.getChannelType.returns('channel');
     slackEventStub.withArgs('loggedIn').callsArgWith(1, botInfo);
     slackEventStub.withArgs('message').callsArgWith(1, message);
     slackGetUserStub.withArgs(userMock.id).returns(userMock);
@@ -185,6 +187,50 @@ describe('lib/robot', function() {
 
     var robot = new Robot({mentionToRespond: false}, {});
     neuronStub.callCount.should.be.equal(1);
+    handleSpy.should.be.calledWith(message, userMock, channelMock);
+
+    loggerStub.restore();
+    handleSpy.restore();
+  });
+
+  it('should skip checking mention in DM by default', () => {
+    var message = {text: 'send link', user: 'y', channel: 'r', getChannelType: sinon.stub() };
+    var userMock = {id: 'y', name: 'y-men'};
+    var channelMock = {id: 'r', name: 'release'};
+
+    var handleSpy = sinon.spy(Robot.prototype, 'handle_');
+    var loggerStub = sinon.stub(Log.prototype, 'info');
+
+    message.getChannelType.returns('DM');
+    slackEventStub.withArgs('loggedIn').callsArgWith(1, botInfo);
+    slackEventStub.withArgs('message').callsArgWith(1, message);
+    slackGetUserStub.withArgs(userMock.id).returns(userMock);
+    slackGetTargetStub.withArgs(channelMock.id).returns(channelMock);
+
+    var robot = new Robot({}, {});
+    neuronStub.callCount.should.be.equal(1);
+    handleSpy.should.be.calledWith(message, userMock, channelMock);
+
+    loggerStub.restore();
+    handleSpy.restore();
+  });
+
+  it('should skip checking mention in DM by default', () => {
+    var message = {text: 'send link', user: 'y', channel: 'r', getChannelType: sinon.stub() };
+    var userMock = {id: 'y', name: 'y-men'};
+    var channelMock = {id: 'r', name: 'release'};
+
+    var handleSpy = sinon.spy(Robot.prototype, 'handle_');
+    var loggerStub = sinon.stub(Log.prototype, 'info');
+
+    message.getChannelType.returns('DM');
+    slackEventStub.withArgs('loggedIn').callsArgWith(1, botInfo);
+    slackEventStub.withArgs('message').callsArgWith(1, message);
+    slackGetUserStub.withArgs(userMock.id).returns(userMock);
+    slackGetTargetStub.withArgs(channelMock.id).returns(channelMock);
+
+    var robot = new Robot({skipDMMention: false}, {});
+    neuronStub.callCount.should.be.equal(0);
     handleSpy.should.be.calledWith(message, userMock, channelMock);
 
     loggerStub.restore();

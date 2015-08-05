@@ -26,7 +26,7 @@ export default class BaseAction {
     var {user} = this.messagePayload;
     response.as_user = true;
 
-    return this.sendDM_(user.name, response);
+    return this.sendDM_(user, response);
   }
 
   replyTextDM(message) {
@@ -35,10 +35,6 @@ export default class BaseAction {
 
   replyTo(name, response) {
     response.as_user = true;
-
-    if (name[0] === '@') {
-      return this.sendDM_(name, response);
-    }
 
     return new Promise((resolve, reject) => {
       var target = this.robot_.slack_.getChannelGroupOrDMByName(name);
@@ -51,10 +47,10 @@ export default class BaseAction {
     return this.replyTo(name, {text: message});
   }
 
-  sendDM_(userName, response) {
+  sendDM_(user, response) {
     return new Promise((resolve, reject) => {
-      this.robot_.slack_.openDM(userName, () => {
-        var dm = this.robot_.slack_.getDMByName(userName);
+      this.robot_.slack_.openDM(user.id, () => {
+        var dm = this.robot_.slack_.getDMByName(user.name);
         dm.postMessage(response);
         return resolve();
       });

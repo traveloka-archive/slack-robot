@@ -7,7 +7,7 @@ import NeuronListener from '../lib/NeuronListener';
 var robot = {
   slack_: {
     openDM: sinon.stub(),
-    getDMById: sinon.stub()
+    getDMByName: sinon.stub()
   },
   logger: {
     info: sinon.spy()
@@ -122,13 +122,13 @@ describe('src/robot/Neuron', () => {
   it('should be able to notify user when asking for help in channel/group', () => {
     var neuron = new Neuron(robot);
     var message = {text: 'show help', getChannelType: sinon.stub()};
-    var user = {id: 'x'};
+    var user = {id: 'x', name: 'x-men'};
     var channel = {postMessage: sinon.spy()};
     var dm = {postMessage: sinon.spy()};
 
     message.getChannelType.returns('channel');
     robot.slack_.openDM.withArgs(user.id).callsArgWith(1);
-    robot.slack_.getDMById.withArgs(user.id).returns(dm);
+    robot.slack_.getDMByName.withArgs(user.name).returns(dm);
     neuron.handle(message, user, channel);
     channel.postMessage.should.be.calledWith({as_user: true, text: 'Please check your direct message'});
     dm.postMessage.should.be.calledOnce;

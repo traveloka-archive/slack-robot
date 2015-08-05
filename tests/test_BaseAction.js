@@ -15,7 +15,7 @@ var robot = {
     getDMByName: sinon.stub()
   }
 };
-var payload = { user: {name: 'x-men'}, channel: { postMessage: sinon.spy() } };
+var payload = { user: {id: 'x', name: 'x-men'}, channel: { postMessage: sinon.spy() } };
 
 describe('action/BaseAction', () => {
   it('should be able to attach robot instance', function() {
@@ -65,7 +65,7 @@ describe('action/BaseAction', () => {
     robot.slack_.getDMByName.returns(dmStub);
 
     action.payload(payload).replyDM(response).then(() => {
-      robot.slack_.openDM.getCall(0).args[0].should.be.equal(payload.user.name);
+      robot.slack_.openDM.getCall(0).args[0].should.be.equal(payload.user.id);
       dmStub.postMessage.should.be.calledWith({as_user: true, via: 'dm'});
       done();
     });
@@ -85,21 +85,8 @@ describe('action/BaseAction', () => {
     robot.slack_.getDMByName.returns(dmStub);
 
     action.payload(payload).replyTextDM(message).then(() => {
-      robot.slack_.openDM.getCall(0).args[0].should.be.equal(payload.user.name);
+      robot.slack_.openDM.getCall(0).args[0].should.be.equal(payload.user.id);
       dmStub.postMessage.should.be.calledWith({as_user: true, text: 'text via dm'});
-      done();
-    });
-  });
-
-  it('should be able to reply to specific DM', done => {
-    var action = new BaseAction(robot);
-    var sendDMStub = sinon.stub(BaseAction.prototype, 'sendDM_').returns(Promise.resolve());
-    var response = {specific: 'dm'};
-
-    action.payload(payload).replyTo('@kadal', response).then(() => {
-      sendDMStub.getCall(0).args[0].should.be.equal('@kadal');
-      sendDMStub.getCall(0).args[1].should.be.deep.equal({as_user: true, specific: 'dm'});
-      sendDMStub.restore();
       done();
     });
   });

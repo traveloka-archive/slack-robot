@@ -14,6 +14,7 @@ import Robot from 'slack-robot';
 var robotOpts = {
   ignoreMessageInGeneral: true, // prevent bot to respond anything in #general channel
   mentionToRespond: true,       // prevent bot to respond if not mentioned
+  skipDMMention: true,          // no need to mention bot in direct message (ignore mentionToRespond opt in DM)
   removeBotMention: true        // remove bot mention in message text (your matcher should include bot name)
 };
 
