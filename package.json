@@ -1,0 +1,37 @@
+{
+  "name": "slack-robot",
+  "version": "0.1.0",
+  "description": "Simple robot for your slack integration",
+  "main": "lib/Robot.js",
+  "scripts": {
+    "test": "mocha --compilers js:babel/register tests/**/**/*.js",
+    "coverage": "istanbul cover _mocha tests/**/*.js -- --compilers js:babel/register"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/pveyes/slack-robot.git"
+  },
+  "keywords": [
+    "slack",
+    "robot"
+  ],
+  "author": "Fatih Kalifa <fatihkalifa@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/pveyes/slack-robot/issues"
+  },
+  "homepage": "https://github.com/pveyes/slack-robot#readme",
+  "devDependencies": {
+    "babel": "^5.8.20",
+    "chai": "^3.2.0",
+    "chai-as-promised": "^5.1.0",
+    "mocha": "^2.2.5",
+    "sinon": "^1.15.4",
+    "sinon-chai": "^2.8.0"
+  },
+  "dependencies": {
+    "imstore": "^0.1.2",
+    "log": "^1.4.0",
+    "slack-client": "^1.4.1"
+  }
+}
