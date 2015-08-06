@@ -158,13 +158,13 @@ Example:
 
   `.replyTextDM(message : string) : Promise`
 
-- Send message to specific channel:
+- Send message to specific channel/group/user:
 
-  `.sendTo(channelName : string, response : SlackResponseObject) : Promise`
+  `.sendTo(target : string, response : SlackResponseObject) : Promise`
 
-- Syntactic sugar to send only text to specific channel:
+- Syntactic sugar to send only text to specific channel/group/user:
 
-  `.sendTextTo(channelName : string, message : string) : Promise`
+  `.sendTextTo(target : string, message : string) : Promise`
 
 - Format the username so that slack will recognize as mention. **Leading @ character is optional.**:
 

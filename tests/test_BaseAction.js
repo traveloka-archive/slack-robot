@@ -91,7 +91,7 @@ describe('action/BaseAction', () => {
     });
   });
 
-  it('should be able to reply to specific channel/group/dm', done => {
+  it('should be able to send response to specific channel/group/dm instead of reply', done => {
     var action = new BaseAction(robot);
     var response = {specific: 'channel/group/dm'};
 
@@ -102,21 +102,21 @@ describe('action/BaseAction', () => {
     var chatStub = {postMessage: sinon.stub()};
     robot.slack_.getChannelGroupOrDMByName.returns(chatStub);
 
-    action.payload(payload).replyTo('#general', response).then(() => {
+    action.payload(payload).sendTo('#general', response).then(() => {
       robot.slack_.getChannelGroupOrDMByName.should.be.calledWith('#general');
       chatStub.postMessage.should.be.calledWith({as_user: true, specific: 'channel/group/dm'});
       done();
     });
   });
 
-  it('should be able to reply text to specific channel/group/DM', done => {
+  it('should be able to send text to specific channel/group/DM', done => {
     var action = new BaseAction(robot);
     var message = 'message for specific channel/group/dm';
-    var replyToStub = sinon.stub(BaseAction.prototype, 'replyTo').returns(Promise.resolve());
+    var sendToStub = sinon.stub(BaseAction.prototype, 'sendTo').returns(Promise.resolve());
 
-    action.payload(payload).replyTextTo('#general', message).then(() => {
-      replyToStub.should.be.calledWith('#general', {text: message})
-      replyToStub.restore();
+    action.payload(payload).sendTextTo('#general', message).then(() => {
+      sendToStub.should.be.calledWith('#general', {text: message})
+      sendToStub.restore();
       done();
     });
   });
