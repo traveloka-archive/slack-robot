@@ -1,4 +1,4 @@
-# slack-robot [![Build Status](https://travis-ci.org/pveyes/slack-robot.svg)](https://travis-ci.org/pveyes/slack-robot) [![Coverage Status](https://coveralls.io/repos/pveyes/slack-robot/badge.svg?branch=master&service=github)](https://coveralls.io/github/pveyes/slack-robot?branch=master)
+# slack-robot [![Build Status](https://travis-ci.org/pveyes/slack-robot.svg)](https://travis-ci.org/pveyes/slack-robot) [![Coverage Status](https://coveralls.io/repos/pveyes/slack-robot/badge.svg?branch=master&service=github)](https://coveralls.io/github/pveyes/slack-robot?branch=master) [![Package Version](http://img.shields.io/npm/v/slack-robot.svg)](https://www.npmjs.com/package/slack-robot)
 > Simple robot for your slack integration
 
 ## Installation

@@ -11,7 +11,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/pveyes/slack-robot.git"
+    "url": "git+ssh://git@github.com/traveloka/slack-robot.git"
   },
   "keywords": [
     "slack",
@@ -20,9 +20,9 @@
   "author": "Fatih Kalifa <fatihkalifa@gmail.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/pveyes/slack-robot/issues"
+    "url": "https://github.com/traveloka/slack-robot/issues"
   },
-  "homepage": "https://github.com/pveyes/slack-robot#readme",
+  "homepage": "https://github.com/traveloka/slack-robot#readme",
   "devDependencies": {
     "babel": "^5.8.20",
     "chai": "^3.2.0",
