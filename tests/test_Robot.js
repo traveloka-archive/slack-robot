@@ -61,6 +61,20 @@ describe('lib/robot', function() {
     listenStub.should.be.calledWith('x');
   });
 
+  it('should ignore message with unknown channel / user', () => {
+    var message = {text: 'hack'};
+
+    slackEventStub.withArgs('loggedIn').callsArgWith(1, botInfo);
+    slackEventStub.withArgs('message').callsArgWith(1, message);
+    slackGetUserStub.withArgs('U123').returns(null);
+    slackGetChannelStub.withArgs('C122').returns(null);
+
+    var handleSpy = sinon.spy(Robot.prototype, 'handle_');
+    var robot = new Robot({}, {});
+
+    handleSpy.callCount.should.be.equal(0);
+    handleSpy.restore();
+  })
 
   it('should parse message correctly', () => {
     var message = {text: '<!channel> call <@U123> and <@U124|@weirduser> from <#C122> or <#C121|#frontend> <google|google.com> <twitter.com>', user: 'x', channel: 'y'};
@@ -83,7 +97,6 @@ describe('lib/robot', function() {
 
     loggerStub.restore();
     handleSpy.restore();
-
   });
 
   it('should ignore message from self', () => {

@@ -12,6 +12,7 @@ var robot = {
   slack_: {
     openDM: sinon.stub(),
     getChannelGroupOrDMByName: sinon.stub(),
+    getDMById: sinon.stub(),
     getDMByName: sinon.stub()
   }
 };
@@ -58,11 +59,13 @@ describe('action/BaseAction', () => {
     // reset stub
     robot.slack_.openDM.reset();
     robot.slack_.getDMByName.reset();
+    robot.slack_.getDMById.reset();
 
     // prepare stub
     var dmStub = {postMessage: sinon.stub()};
     robot.slack_.openDM.callsArgWith(1);
     robot.slack_.getDMByName.returns(dmStub);
+    robot.slack_.getDMById.returns(dmStub);
 
     action.payload(payload).replyDM(response).then(() => {
       robot.slack_.openDM.getCall(0).args[0].should.be.equal(payload.user.id);
@@ -78,11 +81,13 @@ describe('action/BaseAction', () => {
     // reset stub
     robot.slack_.openDM.reset();
     robot.slack_.getDMByName.reset();
+    robot.slack_.getDMById.reset();
 
     // prepare stub
     var dmStub = {postMessage: sinon.stub()};
     robot.slack_.openDM.callsArgWith(1);
     robot.slack_.getDMByName.returns(dmStub);
+    robot.slack_.getDMById.returns(dmStub);
 
     action.payload(payload).replyTextDM(message).then(() => {
       robot.slack_.openDM.getCall(0).args[0].should.be.equal(payload.user.id);
@@ -90,6 +95,48 @@ describe('action/BaseAction', () => {
       done();
     });
   });
+
+
+  it('should be able to find the best way to reply via DM', done => {
+    var action = new BaseAction(robot);
+    var message = 'text via dm';
+
+    // reset stub
+    robot.slack_.openDM.reset();
+    robot.slack_.getDMByName.reset();
+    robot.slack_.getDMById.reset();
+
+    // prepare stub
+    var dmStub = {postMessage: sinon.stub()};
+    robot.slack_.openDM.callsArgWith(1);
+    robot.slack_.getDMByName.returns(dmStub);
+    robot.slack_.getDMById.returns(null);
+
+    action.payload(payload).replyTextDM(message).then(() => {
+      robot.slack_.openDM.getCall(0).args[0].should.be.equal(payload.user.id);
+      dmStub.postMessage.should.be.calledWith({as_user: true, text: 'text via dm'});
+      done();
+    });
+  });
+
+  it('should be reject promise if not able to reply dm', () => {
+    var action = new BaseAction(robot);
+    var message = 'text via dm';
+    var expectedError = 'Cannot get dm instance';
+
+    // reset stub
+    robot.slack_.openDM.reset();
+    robot.slack_.getDMByName.reset();
+    robot.slack_.getDMById.reset();
+
+    // prepare stub
+    robot.slack_.openDM.callsArgWith(1);
+    robot.slack_.getDMByName.returns(undefined);
+    robot.slack_.getDMById.returns(undefined);
+
+    return action.payload(payload).replyTextDM(message).should.be.rejectedWith(expectedError);
+  });
+
 
   it('should be able to send response to specific channel/group/dm instead of reply', done => {
     var action = new BaseAction(robot);

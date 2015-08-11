@@ -7,7 +7,8 @@ import NeuronListener from '../lib/NeuronListener';
 var robot = {
   slack_: {
     openDM: sinon.stub(),
-    getDMByName: sinon.stub()
+    getDMByName: sinon.stub(),
+    getDMById: sinon.stub()
   },
   logger: {
     info: sinon.spy()
@@ -129,9 +130,46 @@ describe('src/robot/Neuron', () => {
     message.getChannelType.returns('channel');
     robot.slack_.openDM.withArgs(user.id).callsArgWith(1);
     robot.slack_.getDMByName.withArgs(user.name).returns(dm);
+    robot.slack_.getDMById.withArgs(user.id).returns(dm);
     neuron.handle(message, user, channel);
     channel.postMessage.should.be.calledWith({as_user: true, text: 'Please check your direct message'});
     dm.postMessage.should.be.calledOnce;
+  });
+
+  it('should be able to lookup the "best" way to get DM instance', () => {
+    var neuron = new Neuron(robot);
+    var message = {text: 'show help', getChannelType: sinon.stub()};
+    var user = {id: 'x', name: 'x-men'};
+    var channel = {postMessage: sinon.spy()};
+    var dm = {postMessage: sinon.spy()};
+
+    message.getChannelType.returns('channel');
+    robot.slack_.openDM.withArgs(user.id).callsArgWith(1);
+    robot.slack_.getDMByName.withArgs(user.name).returns(dm);
+    robot.slack_.getDMById.withArgs(user.id).returns(null);
+    neuron.handle(message, user, channel);
+    dm.postMessage.should.be.calledOnce;
+  });
+
+  it('should be able to notify user when help cannot be sent via DM', () => {
+    var neuron = new Neuron(robot);
+    var message = {text: 'show help', getChannelType: sinon.stub()};
+    var user = {id: 'x', name: 'x-men'};
+    var channel = {postMessage: sinon.spy()};
+
+    neuron.listeners = [
+      {commandInfo: 'test', description: 'just testing'},
+      {commandInfo: 'testing :something in :environment', description: 'another test'}
+    ];
+
+    var helpText = 'just testing\nCommand: *test*\n\nanother test\nCommand: *testing :something in :environment*';
+
+    message.getChannelType.returns('channel');
+    robot.slack_.openDM.withArgs(user.id).callsArgWith(1);
+    robot.slack_.getDMByName.withArgs(user.name).returns(undefined);
+    robot.slack_.getDMById.withArgs(user.id).returns(undefined);
+    neuron.handle(message, user, channel);
+    channel.postMessage.should.be.calledWith({as_user: true, text: helpText});
   });
 
   it('should be able to respond if there is no matching listener', () => {
