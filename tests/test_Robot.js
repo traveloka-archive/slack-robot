@@ -1,15 +1,16 @@
 import chai from 'chai';
 import sinon from 'sinon';
-import sinon_chai from 'sinon-chai';
-import Slack from 'slack-client';
+import sinonChai from 'sinon-chai';
 import Log from 'log';
+import Slack from 'slack-client';
 import Robot from '../lib/Robot';
 import Neuron from '../lib/Neuron';
 
-chai.use(sinon_chai);
+chai.use(sinonChai);
 chai.should();
 
-describe('lib/robot', function() {
+describe('lib/robot', () => {
+  const SLACK_ACCESS_TOKEN = 'xqwd-0asdaus7dha3ejwdkajdnq3ui';
   var botInfo = {id: 'x', name: 'x-men'};
   var slackLoginStub, slackEventStub, slackGetTargetStub, slackGetChannelStub, slackGetUserStub;
   var neuronStub;
@@ -25,7 +26,7 @@ describe('lib/robot', function() {
     slackEventStub = sinon.stub(Slack.prototype, 'on');
     neuronStub = sinon.stub(Neuron.prototype, 'handle');
     slackLoginStub.reset();
-  })
+  });
 
   afterEach(() => {
     slackEventStub.restore();
@@ -39,8 +40,46 @@ describe('lib/robot', function() {
     slackLoginStub.restore();
   });
 
+  it('should accept token string in constructor', () => {
+    new Robot(SLACK_ACCESS_TOKEN);
+    slackLoginStub.should.be.calledOnce;
+  });
+
+  it('should accept slack option object in constructor', () => {
+    new Robot({token: SLACK_ACCESS_TOKEN});
+    slackLoginStub.should.be.calledOnce;
+  });
+
+  it('should get default robot options if not specified', () => {
+    var botDefaultOptions = {
+      ignoreMessageInGeneral: true,
+      mentionToRespond: true,
+      skipDMMention: true,
+      removeBotMention: true
+    };
+
+    var robot = new Robot(SLACK_ACCESS_TOKEN);
+    robot._botOptions.should.be.deep.equal(botDefaultOptions);
+  });
+
+  it('should replace default robot options if specified', () => {
+    var customBotOption = {
+      mentionToRespond: false,
+      removeBotMention: false
+    };
+    var expectedBotOption = {
+      ignoreMessageInGeneral: true,
+      mentionToRespond: false,
+      skipDMMention: true,
+      removeBotMention: false
+    };
+
+    var robot = new Robot(SLACK_ACCESS_TOKEN, customBotOption);
+    robot._botOptions.should.be.deep.equal(expectedBotOption);
+  });
+
   it('should login to slack', () => {
-    var robot = new Robot({}, {});
+    new Robot(SLACK_ACCESS_TOKEN);
     slackLoginStub.should.be.calledOnce;
   });
 
@@ -48,20 +87,25 @@ describe('lib/robot', function() {
     var loggerStub = sinon.stub(Log.prototype, 'info');
     slackEventStub.withArgs('loggedIn').callsArgWith(1, botInfo);
 
-    var robot = new Robot({}, {});
-    robot.bot_.should.be.deep.equal(botInfo);
+    var robot = new Robot(SLACK_ACCESS_TOKEN);
+
+    robot._bot.should.be.deep.equal(botInfo);
     loggerStub.should.be.calledWith('Logged in as x-men');
+
     loggerStub.restore();
   });
 
   it('should be able to add listener', () => {
-    var robot = new Robot({}, {});
     var listenStub = sinon.stub(Neuron.prototype, 'listen');
+
+    var robot = new Robot(SLACK_ACCESS_TOKEN);
     robot.listen('x');
+
     listenStub.should.be.calledWith('x');
   });
 
   it('should ignore message with unknown channel / user', () => {
+    var loggerStub = sinon.stub(Log.prototype, 'info');
     var message = {text: 'hack'};
 
     slackEventStub.withArgs('loggedIn').callsArgWith(1, botInfo);
@@ -70,11 +114,12 @@ describe('lib/robot', function() {
     slackGetChannelStub.withArgs('C122').returns(null);
 
     var handleSpy = sinon.spy(Robot.prototype, 'handle_');
-    var robot = new Robot({}, {});
+    new Robot(SLACK_ACCESS_TOKEN);
 
     handleSpy.callCount.should.be.equal(0);
     handleSpy.restore();
-  })
+    loggerStub.restore();
+  });
 
   it('should parse message correctly', () => {
     var message = {text: '<!channel> call <@U123> and <@U124|@weirduser> from <#C122> or <#C121|#frontend> <google|google.com> <twitter.com>', user: 'x', channel: 'y'};
@@ -92,7 +137,7 @@ describe('lib/robot', function() {
     slackGetUserStub.withArgs(userMock.id).returns(userMock);
     slackGetTargetStub.withArgs(channelMock.id).returns(channelMock);
 
-    var robot = new Robot({}, {});
+    new Robot(SLACK_ACCESS_TOKEN);
     handleSpy.should.be.calledWith(expectedMessage, userMock, channelMock);
 
     loggerStub.restore();
@@ -112,7 +157,7 @@ describe('lib/robot', function() {
     slackGetUserStub.withArgs(userMock.id).returns(userMock);
     slackGetTargetStub.withArgs(channelMock.id).returns(channelMock);
 
-    var robot = new Robot({}, {});
+    new Robot(SLACK_ACCESS_TOKEN);
     neuronStub.callCount.should.be.equal(0);
     handleSpy.should.be.calledWith(message, userMock, channelMock);
 
@@ -133,7 +178,7 @@ describe('lib/robot', function() {
     slackGetUserStub.withArgs(userMock.id).returns(userMock);
     slackGetTargetStub.withArgs(channelMock.id).returns(channelMock);
 
-    var robot = new Robot({}, {});
+    new Robot(SLACK_ACCESS_TOKEN);
     neuronStub.callCount.should.be.equal(0);
     handleSpy.should.be.calledWith(message, userMock, channelMock);
 
@@ -145,7 +190,7 @@ describe('lib/robot', function() {
     var message = {text: '@x-men: test message', user: 'y', channel: 'g'};
     var userMock = {id: 'y', name: 'y-men'};
     var channelMock = {id: 'g', name: 'general'};
-
+    var customRobotOption = {ignoreMessageInGeneral: false};
     var handleSpy = sinon.spy(Robot.prototype, 'handle_');
     var loggerStub = sinon.stub(Log.prototype, 'info');
 
@@ -154,7 +199,7 @@ describe('lib/robot', function() {
     slackGetUserStub.withArgs(userMock.id).returns(userMock);
     slackGetTargetStub.withArgs(channelMock.id).returns(channelMock);
 
-    var robot = new Robot({ignoreMessageInGeneral: false}, {});
+    new Robot(SLACK_ACCESS_TOKEN, customRobotOption);
     neuronStub.callCount.should.be.equal(1);
     handleSpy.should.be.calledWith(message, userMock, channelMock);
 
@@ -163,7 +208,7 @@ describe('lib/robot', function() {
   });
 
   it('should ignore message without mention by default', () => {
-    var message = {text: 'test message', user: 'y', channel: 'r', getChannelType: sinon.stub() };
+    var message = {text: 'test message', user: 'y', channel: 'r', getChannelType: sinon.stub()};
     var userMock = {id: 'y', name: 'y-men'};
     var channelMock = {id: 'r', name: 'release'};
 
@@ -176,7 +221,7 @@ describe('lib/robot', function() {
     slackGetUserStub.withArgs(userMock.id).returns(userMock);
     slackGetTargetStub.withArgs(channelMock.id).returns(channelMock);
 
-    var robot = new Robot({}, {});
+    new Robot(SLACK_ACCESS_TOKEN);
     neuronStub.callCount.should.be.equal(0);
     handleSpy.should.be.calledWith(message, userMock, channelMock);
 
@@ -185,10 +230,10 @@ describe('lib/robot', function() {
   });
 
   it('should not ignore message without mention if such option is specified', () => {
-    var message = {text: 'send link', user: 'y', channel: 'r', getChannelType: sinon.stub() };
+    var message = {text: 'send link', user: 'y', channel: 'r', getChannelType: sinon.stub()};
     var userMock = {id: 'y', name: 'y-men'};
     var channelMock = {id: 'r', name: 'release'};
-
+    var customRobotOption = {mentionToRespond: false};
     var handleSpy = sinon.spy(Robot.prototype, 'handle_');
     var loggerStub = sinon.stub(Log.prototype, 'info');
 
@@ -198,7 +243,7 @@ describe('lib/robot', function() {
     slackGetUserStub.withArgs(userMock.id).returns(userMock);
     slackGetTargetStub.withArgs(channelMock.id).returns(channelMock);
 
-    var robot = new Robot({mentionToRespond: false}, {});
+    new Robot(SLACK_ACCESS_TOKEN, customRobotOption);
     neuronStub.callCount.should.be.equal(1);
     handleSpy.should.be.calledWith(message, userMock, channelMock);
 
@@ -207,7 +252,7 @@ describe('lib/robot', function() {
   });
 
   it('should skip checking mention in DM by default', () => {
-    var message = {text: 'send link', user: 'y', channel: 'r', getChannelType: sinon.stub() };
+    var message = {text: 'send link', user: 'y', channel: 'r', getChannelType: sinon.stub()};
     var userMock = {id: 'y', name: 'y-men'};
     var channelMock = {id: 'r', name: 'release'};
 
@@ -220,7 +265,7 @@ describe('lib/robot', function() {
     slackGetUserStub.withArgs(userMock.id).returns(userMock);
     slackGetTargetStub.withArgs(channelMock.id).returns(channelMock);
 
-    var robot = new Robot({}, {});
+    new Robot(SLACK_ACCESS_TOKEN);
     neuronStub.callCount.should.be.equal(1);
     handleSpy.should.be.calledWith(message, userMock, channelMock);
 
@@ -229,10 +274,10 @@ describe('lib/robot', function() {
   });
 
   it('should skip checking mention in DM by default', () => {
-    var message = {text: 'send link', user: 'y', channel: 'r', getChannelType: sinon.stub() };
+    var message = {text: 'send link', user: 'y', channel: 'r', getChannelType: sinon.stub()};
     var userMock = {id: 'y', name: 'y-men'};
     var channelMock = {id: 'r', name: 'release'};
-
+    var customRobotOption = {skipDMMention: false};
     var handleSpy = sinon.spy(Robot.prototype, 'handle_');
     var loggerStub = sinon.stub(Log.prototype, 'info');
 
@@ -242,7 +287,7 @@ describe('lib/robot', function() {
     slackGetUserStub.withArgs(userMock.id).returns(userMock);
     slackGetTargetStub.withArgs(channelMock.id).returns(channelMock);
 
-    var robot = new Robot({skipDMMention: false}, {});
+    new Robot(SLACK_ACCESS_TOKEN, customRobotOption);
     neuronStub.callCount.should.be.equal(0);
     handleSpy.should.be.calledWith(message, userMock, channelMock);
 
@@ -255,7 +300,6 @@ describe('lib/robot', function() {
     var cleanMessage = {text: 'test message', user: 'y', channel: 'r'};
     var userMock = {id: 'y', name: 'y-men'};
     var channelMock = {id: 'r', name: 'release'};
-
     var loggerStub = sinon.stub(Log.prototype, 'info');
 
     slackEventStub.withArgs('loggedIn').callsArgWith(1, botInfo);
@@ -263,7 +307,7 @@ describe('lib/robot', function() {
     slackGetUserStub.withArgs(userMock.id).returns(userMock);
     slackGetTargetStub.withArgs(channelMock.id).returns(channelMock);
 
-    var robot = new Robot({mentionToRespond: false}, {});
+    new Robot(SLACK_ACCESS_TOKEN);
     neuronStub.getCall(0).args[0].should.be.deep.equal(cleanMessage);
 
     loggerStub.restore();
@@ -274,7 +318,7 @@ describe('lib/robot', function() {
     var expectedMessage = {text: '@x-men: test message', user: 'y', channel: 'r'};
     var userMock = {id: 'y', name: 'y-men'};
     var channelMock = {id: 'r', name: 'release'};
-
+    var customRobotOption = {removeBotMention: false};
     var loggerStub = sinon.stub(Log.prototype, 'info');
 
     slackEventStub.withArgs('loggedIn').callsArgWith(1, botInfo);
@@ -282,7 +326,7 @@ describe('lib/robot', function() {
     slackGetUserStub.withArgs(userMock.id).returns(userMock);
     slackGetTargetStub.withArgs(channelMock.id).returns(channelMock);
 
-    var robot = new Robot({removeBotMention: false}, {});
+    new Robot(SLACK_ACCESS_TOKEN, customRobotOption);
     neuronStub.getCall(0).args[0].should.be.deep.equal(expectedMessage);
 
     loggerStub.restore();
@@ -294,9 +338,8 @@ describe('lib/robot', function() {
 
     slackEventStub.withArgs('error').callsArgWith(1, error);
 
-    var robot = new Robot({}, {});
+    new Robot(SLACK_ACCESS_TOKEN);
     loggerStub.should.be.calledWith(error);
     loggerStub.restore();
-
   });
 });
