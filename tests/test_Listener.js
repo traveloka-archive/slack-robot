@@ -91,6 +91,12 @@ describe('lib/Listener', () => {
     neuronListener.handle.should.be.deep.equal(action);
   });
 
+  it('should set rejected promise as default handle', () => {
+    var neuronListener = new Listener(robot, messageFormat);
+
+    neuronListener.handle().should.be.rejectedWith('Unknown handle');
+  });
+
   it('should validate action callback', () => {
     var actionError = 'Action must be a function';
     var neuronListener = new Listener(robot, messageFormat);
@@ -256,13 +262,14 @@ describe('lib/Listener', () => {
     neuronListener._getParam(messageText).should.be.deep.equal(expectedParam);
   });
 
-  it('should be able to get matches if messageFormat is regex', () => {
+  it('should be able to get matches & param if messageFormat is regex', () => {
     var messageFormat = /get ([a-z]+) from ([0-9]{4})/;
     var messageText = 'get kambing from 2010';
     var expectedMatches = ['kambing', '2010'];
     var neuronListener = new Listener(robot, messageFormat);
 
     neuronListener._getMatches(messageText).should.be.deep.equal(expectedMatches);
+    neuronListener._getParam(messageText).should.be.deep.equal({});
   });
 
   it('should be able to return empty array if there is no more regex group', () => {
