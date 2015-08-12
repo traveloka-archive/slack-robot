@@ -22,7 +22,6 @@ var slackMessage = {
 var channelInstanceMock = {name: 'Some channel', postMessage: sinon.spy()};
 var userInstanceMock = {id: 'U233REWD', name: 'someuser'};
 
-
 describe('lib/Response', () => {
   beforeEach(() => {
     slack.openDM.reset();
