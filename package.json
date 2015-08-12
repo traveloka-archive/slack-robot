@@ -25,6 +25,7 @@
   "homepage": "https://github.com/traveloka/slack-robot#readme",
   "devDependencies": {
     "babel": "^5.8.20",
+    "babel-plugin-flow-comments": "^1.0.9",
     "chai": "^3.2.0",
     "chai-as-promised": "^5.1.0",
     "coveralls": "^2.11.3",
