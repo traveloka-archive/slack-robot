@@ -1,6 +1,6 @@
 {
   "name": "slack-robot",
-  "version": "1.0.4",
+  "version": "2.0.0",
   "description": "Simple robot for your slack integration",
   "main": "src/Robot.js",
   "scripts": {
@@ -32,28 +32,12 @@
     "istanbul": "^0.3.17",
     "mocha": "^2.2.5",
     "sinon": "^1.15.4",
-    "sinon-chai": "^2.8.0",
-    "xo": "^0.5.2"
+    "sinon-chai": "^2.8.0"
   },
   "dependencies": {
     "bluebird": "^2.9.34",
     "imstore": "^0.1.2",
     "log": "^1.4.0",
     "slack-client": "^1.4.1"
-  },
-  "xo": {
-    "esnext": true,
-    "space": 2,
-    "envs": [
-      "node",
-      "mocha"
-    ],
-    "rules": {
-      "no-fallthrough": 0,
-      "no-new": 0,
-      "no-unused-expressions": 0,
-      "one-var": 0,
-      "no-var": 0
-    }
   }
 }
