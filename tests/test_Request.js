@@ -40,13 +40,15 @@ describe('lib/Request', () => {
   it('should be able to set message object', function() {
     var expectedMessage = {
       text: 'See @nein in #nei-ne',
-      type: 'DM'
+      isDirect: true,
+      withMention: true
     };
 
     slack.getChannelGroupOrDMByID.withArgs(slackMessage.channel).returns(channelInstanceMock);
     slack.getUserByID.withArgs(slackMessage.user).returns(userInstanceMock);
 
-    var req = new Request(slack, slackMessage, robotMention);
+    var req = new Request(slack, robotMention);
+    req.parse(slackMessage);
     req.message.should.be.deep.equal(expectedMessage);
   });
 
@@ -59,7 +61,8 @@ describe('lib/Request', () => {
     slack.getChannelGroupOrDMByID.withArgs(slackMessage.channel).returns(channelInstanceMock);
     slack.getUserByID.withArgs(slackMessage.user).returns(userInstanceMock);
 
-    var req = new Request(slack, slackMessage, robotMention);
+    var req = new Request(slack, robotMention);
+    req.parse(slackMessage);
     req.user.should.be.deep.equal(expectedUser);
   });
 
@@ -67,7 +70,8 @@ describe('lib/Request', () => {
     slack.getChannelGroupOrDMByID.withArgs(slackMessage.channel).returns(channelInstanceMock);
     slack.getUserByID.withArgs(slackMessage.user).returns(undefined);
 
-    var req = new Request(slack, slackMessage, robotMention);
+    var req = new Request(slack, robotMention);
+    req.parse(slackMessage);
     should.not.exist(req.user);
     should.exist(req.channel);
   });
@@ -81,7 +85,8 @@ describe('lib/Request', () => {
     slack.getChannelGroupOrDMByID.withArgs(slackMessage.channel).returns(channelInstanceMock);
     slack.getUserByID.withArgs(slackMessage.user).returns(userInstanceMock);
 
-    var req = new Request(slack, slackMessage, robotMention);
+    var req = new Request(slack, robotMention);
+    req.parse(slackMessage);
     req.channel.should.be.deep.equal(expectedChannel);
   });
 
@@ -89,7 +94,8 @@ describe('lib/Request', () => {
     slack.getChannelGroupOrDMByID.withArgs(slackMessage.channel).returns(undefined);
     slack.getUserByID.withArgs(slackMessage.user).returns(userInstanceMock);
 
-    var req = new Request(slack, slackMessage, robotMention);
+    var req = new Request(slack, robotMention);
+    req.parse(slackMessage);
     should.exist(req.user);
     should.not.exist(req.channel);
   });
@@ -101,7 +107,8 @@ describe('lib/Request', () => {
     slack.getChannelGroupOrDMByID.withArgs(slackMessage.channel).returns(undefined);
     slack.getUserByID.withArgs(slackMessage.user).returns(userInstanceMock);
 
-    var req = new Request(slack, message, robotMention);
+    var req = new Request(slack, robotMention);
+    req.parse(message);
     req.message.text.should.be.equal('');
   });
 
@@ -112,7 +119,8 @@ describe('lib/Request', () => {
     slack.getChannelGroupOrDMByID.withArgs(slackMessage.channel).returns(undefined);
     slack.getUserByID.withArgs(slackMessage.user).returns(userInstanceMock);
 
-    var req = new Request(slack, message, robotMention);
+    var req = new Request(slack, robotMention);
+    req.parse(message);
     req.message.text.should.be.equal('@nein #nei-ne');
   });
 
@@ -123,7 +131,8 @@ describe('lib/Request', () => {
     slack.getChannelGroupOrDMByID.withArgs(slackMessage.channel).returns(undefined);
     slack.getUserByID.withArgs(slackMessage.user).returns(userInstanceMock);
 
-    var req = new Request(slack, message, robotMention);
+    var req = new Request(slack, robotMention);
+    req.parse(message);
     req.message.text.should.be.equal('@group hahaha lol(yolo)');
   });
 
