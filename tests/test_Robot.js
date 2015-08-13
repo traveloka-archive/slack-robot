@@ -9,7 +9,7 @@ import Neuron from '../lib/Neuron';
 chai.use(sinonChai);
 chai.should();
 
-describe('lib/robot', () => {
+describe('lib/Robot', () => {
   const SLACK_ACCESS_TOKEN = 'xqwd-0asdaus7dha3ejwdkajdnq3ui';
   var botInfo = {id: 'x', name: 'x-men', mention: new RegExp('.*@x-men:?')};
   var slackLoginStub, slackEventStub, slackGetTargetStub, slackGetChannelStub, slackGetUserStub;
