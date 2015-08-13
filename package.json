@@ -4,7 +4,9 @@
   "description": "Simple robot for your slack integration",
   "main": "src/Robot.js",
   "scripts": {
-    "test": "mocha --compilers js:babel/register tests/**/**/*.js",
+    "lint": "eslint lib",
+    "unit": "mocha --compilers js:babel/register tests/**/**/*.js",
+    "test": "npm run lint && npm run unit",
     "coverage": "istanbul cover _mocha tests/**/*.js -- --compilers js:babel/register",
     "coveralls": "istanbul cover _mocha tests/**/*.js --report lcovonly -- --compilers js:babel/register && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage",
     "prepublish": "babel -d src/ lib/"
@@ -25,10 +27,13 @@
   "homepage": "https://github.com/traveloka/slack-robot#readme",
   "devDependencies": {
     "babel": "^5.8.20",
+    "babel-eslint": "^4.0.5",
     "babel-plugin-flow-comments": "^1.0.9",
     "chai": "^3.2.0",
     "chai-as-promised": "^5.1.0",
     "coveralls": "^2.11.3",
+    "eslint": "^1.1.0",
+    "eslint-config-xo": "^0.3.1",
     "istanbul": "^0.3.17",
     "mocha": "^2.2.5",
     "sinon": "^1.15.4",
