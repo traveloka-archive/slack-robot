@@ -37,8 +37,8 @@ describe('lib/Response', () => {
 
   it('should be able to set channel and user instance', function() {
     var res = new Response(slack, slackMessage);
-    res.channel.should.be.deep.equal(channelInstanceMock);
-    res.user.should.be.deep.equal(userInstanceMock);
+    res._channel.should.be.deep.equal(channelInstanceMock);
+    res._user.should.be.deep.equal(userInstanceMock);
   });
 
   it('should be able to send response to channel/group/DM', done => {
