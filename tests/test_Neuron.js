@@ -1,21 +1,63 @@
 import chai from 'chai';
 import sinon from 'sinon';
-import sinon_chai from 'sinon-chai';
 import Neuron from '../lib/Neuron';
-import NeuronListener from '../lib/NeuronListener';
+import Listener from '../lib/Listener';
+import Request from '../lib/Request';
+import Response from '../lib/Response';
 
 var robot = {
-  slack_: {
-    openDM: sinon.stub(),
-    getDMByName: sinon.stub(),
-    getDMById: sinon.stub()
-  },
-  logger: {
-    info: sinon.spy()
+  id: 'UR08OT',
+  options: {
+    ignoreMessageInGeneral: true,
+    mentionToRespond: true,
+    skipDMMention: true
   }
 }
 
-describe('src/robot/Neuron', () => {
+describe('lib/Neuron', () => {
+  var requestMock = {
+    message: {
+      text: 'Yo dawg',
+      isDirect: false,
+      withMention: false,
+    },
+    user: {
+      id: 'U28RF4HEW',
+      name: 'muchuser'
+    },
+    channel: {
+      id: 'C3RT34RAD',
+      name: 'such-channel'
+    }
+  };
+  var responseMock = {
+    send: sinon.spy(),
+    sendText: sinon.spy(),
+    sendTextDM: sinon.spy(),
+    reply: sinon.spy()
+  };
+  var requestGenerator, responseGenerator;
+
+  before(() => {
+    requestGenerator = sinon.stub(Request.prototype, 'parse');
+    responseGenerator = sinon.stub(Response.prototype, 'parse');
+  });
+
+  beforeEach(() => {
+    requestGenerator.reset();
+    responseGenerator.reset();
+
+    responseMock.send.reset();
+    responseMock.sendText.reset();
+    responseMock.sendTextDM.reset();
+    responseMock.reply.reset();
+  });
+
+  after(() => {
+    requestGenerator.restore();
+    responseGenerator.restore();
+  });
+
   it('should start with empty array of listener', () => {
     var neuron = new Neuron(robot);
     neuron.listeners.should.be.deep.equal([]);
@@ -23,7 +65,7 @@ describe('src/robot/Neuron', () => {
 
   it('should store robot instance', () => {
     var neuron = new Neuron(robot);
-    neuron.robot_.should.be.deep.equal(robot);
+    neuron._robot.should.be.deep.equal(robot);
   });
 
   it('should be able to add one listener', () => {
@@ -32,7 +74,7 @@ describe('src/robot/Neuron', () => {
 
     neuron.listeners.length.should.be.equal(1);
     neuron.listeners[0].should.be.equal(neuronListener);
-    neuronListener.constructor.should.be.equal(NeuronListener);
+    neuronListener.constructor.should.be.equal(Listener);
   });
 
   it('should be able to add multiple listener', () => {
@@ -44,197 +86,367 @@ describe('src/robot/Neuron', () => {
     neuron.listeners.length.should.be.equal(3);
   });
 
-  it('should be able to show help for empty listener', () => {
-    var neuron = new Neuron(robot);
-    var message = {text: 'help', getChannelType: sinon.stub()};
-    var user = {};
-    var channel = {postMessage: sinon.spy()};
+  it('should ignore message with unknown channel / user', () => {
+    var unknownChannel = Object.assign({}, requestMock, {
+      channel: null,
+      user: null
+    });
+    var dispatchStub = sinon.stub(Neuron.prototype, '_dispatchHandler');
 
-    message.getChannelType.returns('DM');
-    neuron.handle(message, user, channel);
-    channel.postMessage.should.be.calledWith({as_user: true, text: 'There is no command available yet'});
+    requestGenerator.returns(unknownChannel);
+    responseGenerator.returns(responseMock);
+
+    var neuron = new Neuron(robot);
+    neuron.handle();
+
+    dispatchStub.callCount.should.be.equal(0);
+    dispatchStub.restore();
+  });
+
+
+  it('should ignore message from self', () => {
+    var selfMessage = Object.assign({}, requestMock, {
+      user: {
+        id: robot.id
+      }
+    });
+    var dispatchStub = sinon.stub(Neuron.prototype, '_dispatchHandler');
+
+    requestGenerator.returns(selfMessage);
+    responseGenerator.returns(responseMock);
+
+    var neuron = new Neuron(robot);
+    neuron.handle();
+
+    dispatchStub.callCount.should.be.equal(0);
+    dispatchStub.restore();
+  });
+
+  it('should ignore message in general by default', () => {
+    var generalChannel = Object.assign({}, requestMock, {
+      channel: {
+        name: 'general'
+      }
+    });
+    var dispatchStub = sinon.stub(Neuron.prototype, '_dispatchHandler');
+
+    requestGenerator.returns(generalChannel);
+    responseGenerator.returns(responseMock);
+
+    var neuron = new Neuron(robot);
+    neuron.handle();
+
+    dispatchStub.callCount.should.be.equal(0);
+    dispatchStub.restore();
+  });
+
+  it('should not ignore message in general if such option is specified', () => {
+    var customRobot = Object.assign({}, robot, {
+      options: {
+        ignoreMessageInGeneral: false
+      }
+    });
+    var generalChannel = Object.assign({}, requestMock, {
+      channel: {
+        name: 'general'
+      }
+    });
+    var dispatchStub = sinon.stub(Neuron.prototype, '_dispatchHandler');
+
+    requestGenerator.returns(generalChannel);
+    responseGenerator.returns(responseMock);
+
+    var neuron = new Neuron(customRobot);
+    neuron.handle();
+
+    dispatchStub.callCount.should.be.equal(1);
+    dispatchStub.restore();
+  });
+
+  it('should ignore message without mention by default', () => {
+    var randomNoMention = Object.assign({}, requestMock, {
+      message: {
+        isDirect: false,
+        withMention: false
+      },
+      channel: {
+        name: 'random'
+      }
+    });
+    var dispatchStub = sinon.stub(Neuron.prototype, '_dispatchHandler');
+
+    requestGenerator.returns(randomNoMention);
+    responseGenerator.returns(responseMock);
+
+    var neuron = new Neuron(robot);
+    neuron.handle();
+
+    dispatchStub.callCount.should.be.equal(0);
+    dispatchStub.restore();
+  });
+
+  it('should not ignore message without mention if such option is specified', () => {
+    var customRobot = Object.assign({}, robot, {
+      options: {
+        mentionToRespond: false
+      }
+    });
+    var dispatchStub = sinon.stub(Neuron.prototype, '_dispatchHandler');
+
+    requestGenerator.returns(requestMock);
+    responseGenerator.returns(responseMock);
+
+    var neuron = new Neuron(customRobot);
+    neuron.handle();
+
+    dispatchStub.callCount.should.be.equal(1);
+    dispatchStub.restore();
+  });
+
+  it('should always respond to DM by default', () => {
+    var directMessage = Object.assign({}, requestMock, {
+      message: {
+        isDirect: true
+      }
+    });
+    var dispatchStub = sinon.stub(Neuron.prototype, '_dispatchHandler');
+
+    requestGenerator.returns(directMessage);
+    responseGenerator.returns(responseMock);
+
+    var neuron = new Neuron(robot);
+    neuron.handle();
+
+    dispatchStub.callCount.should.be.equal(1);
+    dispatchStub.restore();
+  });
+
+  it('should check for mention in DM if option is specified', () => {
+    var directMessage = Object.assign({}, requestMock, {
+      message: {
+        withMention: false,
+        isDirect: true
+      }
+    });
+    var customRobot = Object.assign({}, robot, {
+      options: {
+        mentionToRespond: true,
+        skipDMMention: false
+      }
+    });
+    var dispatchStub = sinon.stub(Neuron.prototype, '_dispatchHandler');
+
+    requestGenerator.returns(directMessage);
+    responseGenerator.returns(responseMock);
+
+    var neuron = new Neuron(customRobot);
+    neuron.handle();
+
+    dispatchStub.callCount.should.be.equal(0);
+    dispatchStub.restore();
+  });
+
+  it('should be able to show help for empty listener', () => {
+    var helpMessage = Object.assign({}, requestMock, {
+      message: {
+        text: 'help',
+        isDirect: true,
+        withMention: true
+      }
+    });
+    requestGenerator.returns(helpMessage);
+    responseGenerator.returns(responseMock);
+
+    var neuron = new Neuron(robot);
+    neuron.handle();
+
+    responseMock.sendText.should.be.calledWith('There is no command available yet');
   });
 
   it('should be able to show help for every listener', () => {
-    var neuron = new Neuron(robot);
-    var message = {text: 'help', getChannelType: sinon.stub()};
-    var user = {};
-    var channel = {postMessage: sinon.spy()};
+    var helpMessage = Object.assign({}, requestMock, {
+      message: {
+        text: 'help',
+        isDirect: true,
+        withMention: true
+      }
+    });
+    requestGenerator.returns(helpMessage);
+    responseGenerator.returns(responseMock);
 
+    var neuron = new Neuron(robot);
     neuron.listeners = [
       {commandInfo: 'test', description: 'just testing'},
       {commandInfo: 'testing :something in :environment', description: 'another test'}
     ];
 
-    var helpText = 'just testing\nCommand: *test*\n\nanother test\nCommand: *testing :something in :environment*';
+    neuron.handle();
 
-    message.getChannelType.returns('DM');
-    neuron.handle(message, user, channel);
-    channel.postMessage.should.be.calledWith({as_user: true, text: helpText});
+    var helpText = 'just testing\nCommand: *test*\n\nanother test\nCommand: *testing :something in :environment*';
+    responseMock.sendText.should.be.calledWith(helpText);
   });
 
   it('should be able to skip help without description', () => {
-    var neuron = new Neuron(robot);
-    var message = {text: 'help', getChannelType: sinon.stub()};
-    var user = {};
-    var channel = {postMessage: sinon.spy()};
+    var helpMessage = Object.assign({}, requestMock, {
+      message: {
+        text: 'help',
+        isDirect: true,
+        withMention: true
+      }
+    });
+    requestGenerator.returns(helpMessage);
+    responseGenerator.returns(responseMock);
 
+    var neuron = new Neuron(robot);
     neuron.listeners = [
       {commandInfo: 'test', description: 'just testing'},
       {commandInfo: 'command without :description'}
     ];
 
-    var helpText = 'just testing\nCommand: *test*';
+    neuron.handle();
 
-    message.getChannelType.returns('DM');
-    neuron.handle(message, user, channel);
-    channel.postMessage.should.be.calledWith({as_user: true, text: helpText});
+    var helpText = 'just testing\nCommand: *test*';
+    responseMock.sendText.should.be.calledWith(helpText);
   });
 
   it('should be able to respond if no commands have a descrption', () => {
-    var neuron = new Neuron(robot);
-    var message = {text: 'help', getChannelType: sinon.stub()};
-    var user = {};
-    var channel = {postMessage: sinon.spy()};
+    var helpMessage = Object.assign({}, requestMock, {
+      message: {
+        text: 'help',
+        isDirect: true,
+        withMention: true
+      }
+    });
+    requestGenerator.returns(helpMessage);
+    responseGenerator.returns(responseMock);
 
+    var neuron = new Neuron(robot);
     neuron.listeners = [
       {commandInfo: 'test'},
       {commandInfo: 'another command without :description'}
     ];
 
-    var helpText = 'Sorry, no description yet for any available commands';
+    neuron.handle();
 
-    message.getChannelType.returns('DM');
-    neuron.handle(message, user, channel);
-    channel.postMessage.should.be.calledWith({as_user: true, text: helpText});
+    var helpText = 'Sorry, no description yet for any available commands';
+    responseMock.sendText.should.be.calledWith(helpText);
   });
 
   it('should be able to respond using "show help"', () => {
-    var neuron = new Neuron(robot);
-    var message = {text: 'show help', getChannelType: sinon.stub()};
-    var user = {};
-    var channel = {postMessage: sinon.spy()};
+    var helpMessage = Object.assign({}, requestMock, {
+      message: {
+        text: 'show help',
+        isDirect: true,
+        withMention: true
+      }
+    });
+    requestGenerator.returns(helpMessage);
+    responseGenerator.returns(responseMock);
 
-    message.getChannelType.returns('DM');
-    neuron.handle(message, user, channel);
-    channel.postMessage.should.be.calledOnce;
+    var neuron = new Neuron(robot);
+    neuron.handle();
+    responseMock.sendText.should.be.calledOnce;
   });
 
   it('should be able to notify user when asking for help in channel/group', () => {
+    var helpMessage = Object.assign({}, requestMock, {
+      message: {
+        text: 'show help',
+        isDirect: false,
+        withMention: true
+      }
+    });
+    requestGenerator.returns(helpMessage);
+    responseGenerator.returns(responseMock);
+
     var neuron = new Neuron(robot);
-    var message = {text: 'show help', getChannelType: sinon.stub()};
-    var user = {id: 'x', name: 'x-men'};
-    var channel = {postMessage: sinon.spy()};
-    var dm = {postMessage: sinon.spy()};
-
-    message.getChannelType.returns('channel');
-    robot.slack_.openDM.withArgs(user.id).callsArgWith(1);
-    robot.slack_.getDMByName.withArgs(user.name).returns(dm);
-    robot.slack_.getDMById.withArgs(user.id).returns(dm);
-    neuron.handle(message, user, channel);
-    channel.postMessage.should.be.calledWith({as_user: true, text: 'Please check your direct message'});
-    dm.postMessage.should.be.calledOnce;
-  });
-
-  it('should be able to lookup the "best" way to get DM instance', () => {
-    var neuron = new Neuron(robot);
-    var message = {text: 'show help', getChannelType: sinon.stub()};
-    var user = {id: 'x', name: 'x-men'};
-    var channel = {postMessage: sinon.spy()};
-    var dm = {postMessage: sinon.spy()};
-
-    message.getChannelType.returns('channel');
-    robot.slack_.openDM.withArgs(user.id).callsArgWith(1);
-    robot.slack_.getDMByName.withArgs(user.name).returns(dm);
-    robot.slack_.getDMById.withArgs(user.id).returns(null);
-    neuron.handle(message, user, channel);
-    dm.postMessage.should.be.calledOnce;
-  });
-
-  it('should be able to notify user when help cannot be sent via DM', () => {
-    var neuron = new Neuron(robot);
-    var message = {text: 'show help', getChannelType: sinon.stub()};
-    var user = {id: 'x', name: 'x-men'};
-    var channel = {postMessage: sinon.spy()};
-
-    neuron.listeners = [
-      {commandInfo: 'test', description: 'just testing'},
-      {commandInfo: 'testing :something in :environment', description: 'another test'}
-    ];
-
-    var helpText = 'just testing\nCommand: *test*\n\nanother test\nCommand: *testing :something in :environment*';
-
-    message.getChannelType.returns('channel');
-    robot.slack_.openDM.withArgs(user.id).callsArgWith(1);
-    robot.slack_.getDMByName.withArgs(user.name).returns(undefined);
-    robot.slack_.getDMById.withArgs(user.id).returns(undefined);
-    neuron.handle(message, user, channel);
-    channel.postMessage.should.be.calledWith({as_user: true, text: helpText});
+    neuron.handle();
+    responseMock.reply.should.be.calledWith('please check your direct message');
+    responseMock.sendTextDM.should.be.calledOnce;
   });
 
   it('should be able to respond if there is no matching listener', () => {
-    var neuron = new Neuron(robot);
-    var message = {text: 'do something'};
-    var user = {};
-    var channel = {postMessage: sinon.spy()};
+    var needListener = Object.assign({}, requestMock, {
+      message: {
+        text: 'yolo',
+        isDirect: false,
+        withMention: true
+      }
+    });
+    requestGenerator.returns(needListener);
+    responseGenerator.returns(responseMock);
 
-    neuron.handle(message, user, channel);
-    channel.postMessage.should.be.calledWith({as_user: true, text: 'Sorry I didn\'t understand your command'});
+    var neuron = new Neuron(robot);
+    neuron.handle();
+
+    responseMock.reply.should.be.calledWith('sorry I didn\'t understand your command');
   });
 
   it('should be able to run action handler if listener found', () => {
-    var respondStub = sinon.stub(NeuronListener.prototype, 'respondTo');
-    var handleStub = sinon.stub(NeuronListener.prototype, 'handle');
+    var listenerMock = {
+      respondTo: sinon.stub().returns({match: true, allowed: true}),
+      handle: sinon.stub().returns(Promise.resolve())
+    };
+    var needListener = Object.assign({}, requestMock, {
+      message: {
+        text: 'yolo',
+        isDirect: false,
+        withMention: true
+      }
+    });
+    requestGenerator.returns(needListener);
+    responseGenerator.returns(responseMock);
+
     var neuron = new Neuron(robot);
-    var message = {text: 'do something'};
-    var user = {};
-    var channel = {postMessage: sinon.spy()};
+    neuron.listeners = [listenerMock];
+    neuron.handle();
 
-    respondStub.returns({match: true, allowed: true});
-    handleStub.returns(Promise.resolve());
-    neuron.listen('do something');
-
-    neuron.handle(message, user, channel);
-    handleStub.should.be.calledWith(message, user, channel);
-
-    respondStub.restore();
-    handleStub.restore();
+    listenerMock.handle.should.be.calledOnce;
   });
 
   it('should not run action handler if not allowed by ACL', () => {
-    var respondStub = sinon.stub(NeuronListener.prototype, 'respondTo');
-    var handleSpy = sinon.spy(NeuronListener.prototype, 'handle');
+    var listenerMock = {
+      respondTo: sinon.stub().returns({match: true, allowed: false}),
+      handle: sinon.stub().returns(Promise.resolve())
+    };
+    var needListener = Object.assign({}, requestMock, {
+      message: {
+        text: 'yolo',
+        isDirect: false,
+        withMention: true
+      }
+    });
+    requestGenerator.returns(needListener);
+    responseGenerator.returns(responseMock);
+
     var neuron = new Neuron(robot);
-    var message = {text: 'do something'};
-    var user = {};
-    var channel = {postMessage: sinon.spy()};
+    neuron.listeners = [listenerMock];
+    neuron.handle();
 
-    respondStub.returns({match: true, allowed: false});
-    neuron.listen('do something');
-
-    neuron.handle(message, user, channel);
-    handleSpy.callCount.should.be.equal(0);
-
-    respondStub.restore();
-    handleSpy.restore();
+    listenerMock.handle.callCount.should.be.equal(0);
   });
 
   it('should be able to respond if there is an error when executing action', () => {
-    var respondStub = sinon.stub(NeuronListener.prototype, 'respondTo');
-    var handleStub = sinon.stub(NeuronListener.prototype, 'handle');
+    var errorMessage = 'Action error';
+    var errorMock = new Error(errorMessage);
+    var listenerMock = {
+      respondTo: sinon.stub().returns({match: true, allowed: true}),
+      handle: sinon.stub().returns(Promise.reject(errorMock))
+    };
+    var needListener = Object.assign({}, requestMock, {
+      message: {
+        text: 'yolo',
+        isDirect: false,
+        withMention: true
+      }
+    });
+    requestGenerator.returns(needListener);
+    responseGenerator.returns(responseMock);
+
     var neuron = new Neuron(robot);
-    var message = {text: 'do something'};
-    var user = {};
-    var channel = {postMessage: sinon.spy()};
-    var error = 'Execution error';
-    var errorMock = new Error(error);
-
-    respondStub.returns({match: true, allowed: true});
-    handleStub.returns(Promise.reject(errorMock));
-    neuron.listen('do something');
-
-    neuron.handle(message, user, channel).then(() => {
-      channel.postMessage.should.be.calledWith({
+    neuron.listeners = [listenerMock];
+    neuron.handle().then(() => {
+      responseMock.send.should.be.calledWith({
         as_user: true,
         attachments: [
           {
@@ -245,9 +457,6 @@ describe('src/robot/Neuron', () => {
         ]
       });
     });
-
-    respondStub.restore();
-    handleStub.restore();
   });
 
 });
