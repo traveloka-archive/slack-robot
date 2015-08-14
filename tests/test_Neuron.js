@@ -1,9 +1,9 @@
 import chai from 'chai';
 import sinon from 'sinon';
-import Neuron from '../lib/Neuron';
-import Listener from '../lib/Listener';
-import Request from '../lib/Request';
-import Response from '../lib/Response';
+import Neuron from '../src/Neuron';
+import Listener from '../src/Listener';
+import Request from '../src/Request';
+import Response from '../src/Response';
 
 var robot = {
   id: 'UR08OT',

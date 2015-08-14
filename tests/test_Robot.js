@@ -3,8 +3,8 @@ import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import Log from 'log';
 import Slack from 'slack-client';
-import Robot from '../lib/Robot';
-import Neuron from '../lib/Neuron';
+import Robot from '../src/Robot';
+import Neuron from '../src/Neuron';
 
 chai.use(sinonChai);
 chai.should();

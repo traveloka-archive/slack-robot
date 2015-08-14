@@ -37,23 +37,27 @@ var robotOpts = {
   skipDMMention: true,          // no need to mention bot in direct message (ignore mentionToRespond opt in DM)
 };
 
-var robot = new Slack(process.env.YOUR_SLACK_TOKEN, robotOpts);
+var robot = new SlackRobot(process.env.YOUR_SLACK_TOKEN, robotOpts);
 ```
 
+## Listener
 
-To add a listener simply call `robot.listen()` and it will return an instance of `Listener`.
+To add a listener simply call `robot.listen()` and it will return an instance of `Listener` with class signature below:
 
 ```js
 class Listener {
-  desc(description: string): listener
+  // add description to your command (will be used to generate help message)
+  desc(description: string): Listener
 
-  acl(aclCallback: Function(req: Request, res: Response)): listener
+  // add acl to allow/deny access to your command
+  acl(aclCallback: Function(req: Request, res: Response)): Listener
 
-  handler(actionHandler: Function(req: Request, res: Response)
+  // attach your handler to a command
+  handler(actionHandler: Function(req: Request, res: Response))
 }
 ```
 
-## Simple message listener
+### Simple message listener
 
 Pass a string as an argument to `robot.listen` to respond to specific message.
 
@@ -65,22 +69,23 @@ robot.listen('hello').handler(function(req, res) {
 
 The `.handler` will be executed if robot received **'hello'** message from anywhere robot is subscribed to (channel, group, or DM)
 
-## Parameterized message
+### Parameterized message
 
 You can also listen to message with specific parameter with named-regex
 
 ```js
 // match 'get sheep from 2010'
 robot.listen('get :animal([a-z\-]+) from :year([0-9]{4})').handler(function(req, res) {
-  // you can get named-param inside Request instance
+  // you can get named-param inside Request object
   console.log(req.param);
   // {animal: 'sheep', year: '2010'}  
+  // note that req.param always returns Map<string, string>
 });
 ```
 
-## Pure-regex Listener
+### Pure regex Listener
 
-Aside from named regex (which uses a partial regex match), you can use pure regex inside your listener. The difference is, instead of getting named-param inside `Request` instance, you get Array of regex matches
+Aside from named regex (which uses a partial regex match), you can use pure regex inside your listener. The difference is, instead of getting named-param inside `Request` object, you get Array of regex matches
 
 ```js
 // match get sheep from 2010
@@ -95,7 +100,7 @@ robot.listen(/get ([a-z]+) from ([0-9]{4})/).handler(function(req, res) {
 })
 ```
 
-Another difference is when generating help text, you will get *ugly* regex inside your command information `/get ([a-z]+) from ([0-9]{4})` instead of properly named command information (e.g: `get :animal from :year`).
+Another difference is when generating help text, you will get *ugly* regex inside your command information, like `/get ([a-z]+) from ([0-9]{4})/` instead of properly named command information `get :animal from :year`.
 
 ## Request & Response Lifecycle
 
@@ -119,7 +124,7 @@ type Request = {
 }
 ```
 
-To respond to message, you use `Response` object with class signature below:
+To respond a command, you use `Response` object with class signature below:
 
 ```js
 class Response {
@@ -146,12 +151,14 @@ class Response {
 }
 ```
 
+`slack-robot` internally uses `channel.postMessage` API, so most of `Response` API accept `Slack.Response` object. See https://api.slack.com/docs/formatting for more detail. One thing to note is that `slack-robot` will automatically run formatting for you so you don't need to manually format your message to use mention.
+
 ### Example
 
 ```js
 // Listen to "hello", and send "@user: hi!"
 robot.listen('hello').handler(function(req, res) {
-  return res.reply('hi!');
+  return res.reply('hi! Meet my maker @admin');
 });
 
 // listen to "release status" and send attachment (see slack docs for more information)
@@ -168,9 +175,46 @@ robot.listen('release status').handler(function(req, res) {
 })
 ```
 
+## ACL
+
+`slack-robot` comes with simple access control list (ACL) management. It accept a callback that returns a `Boolean`. Action handler will be executed only if this callback return `true`. ACL callback has exact same signature with Action handler, so you can use `Request` and `Response` object.
+
+```js
+robot.listen('push to production').acl(function(req, res) {
+  if (req.channel.name !== 'release-channel') {
+    res.reply(`please send this command in #release-channel`)
+    return false;
+  }
+
+  return true;
+})
+// will only be executed if req.chanel.name === 'release-channel'
+.handler(releaseToProduction);
+```
+
+**Note:** Returning `false` in ACL callback doesn't automatically make robot respond anything to user, it just ignore the command. Always use `Response` object to respond before returning `false` to notify the user that his command will be ignored because of ACL.
+
+## Brain
+
+`slack-robot` also have simple immutable in-memory key-value store using [imstore](https://github.com/pveyes/imstore). To access it simply call imstore API via `robot.brain`.
+
+Example:
+```js
+robot.listen('release').handler(function(req, res) {
+  var isReleasing = robot.brain.get('isReleasing');
+
+  if (isReleasing) {
+    return res.reply('release still in progress');
+  }
+
+  robot.brain.set('isReleasing', true);
+  // run release command ...
+});
+```
+
 ## Automatic help generator
 
-`slack-robot` comes with built-in help generator based on information you specify when attaching listener. Help message will be sent to you via direct message by the bot (even if you ask for them in channel/group). **Make sure you also write description for your command (if not, it will be hidden from help message)**
+As explained above, `slack-robot` comes with built-in help generator based on information you specify when attaching listener. Help message will be sent to you via direct message by the bot (even if you ask for them in channel/group). **Make sure you also write description for your command (if not, it will be hidden from help message)**
 
 ```js
 robot.listen('push :branch([a-Z/\-]+) to :env(production|staging)')
@@ -184,34 +228,6 @@ Example:
 > Deploy specific branch to production or staging servers
 
 > Command: **push :branch to :env**
-
-## ACL
-
-`slack-robot` comes with simple access control list (ACL) management. It accept a callback that returns a boolean. Action handler will be executed only if this callback return `true`. ACL callback has exact same signature with Action handler, so you can use `Request` and `Response` object.
-
-```js
-robot.listen('push to production').acl(function(req, res) {
-  if (req.channel.name !== 'release-channel') {
-    res.reply(`please send this command in ${this.mentionChannel('release-channel')}`)
-    return false;
-  }
-
-  return true;
-})
-.handler(releaseToProduction);
-```
-
-**Note:** Returning `false` in ACL callback doesn't make robot respond anything to user, it just ignore the command. Make sure you use `Response` object to respond before returning `false` to notify the user that his command will be ignored because of ACL.
-
-## Brain
-
-slack-robot also have simple immutable in-memory key-value store using [imstore](https://github.com/pveyes/imstore). To access it simply call imstore API via `robot.brain`.
-
-Example:
-```js
-robot.brain.set('info', {running: false});
-console.log(robot.brain.get('info')) // {running: false}
-```
 
 ## License
 

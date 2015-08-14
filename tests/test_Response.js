@@ -2,7 +2,7 @@ import chai from 'chai';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import chai_as_promised from 'chai-as-promised';
-import Response from '../lib/Response';
+import Response from '../src/Response';
 
 chai.use(sinonChai);
 chai.use(chai_as_promised);

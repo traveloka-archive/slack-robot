@@ -1,9 +1,0 @@
-{
-  "parser": "babel-eslint",
-  "extends": "xo",
-  "rules": {
-    "indent": [2, 2, {"SwitchCase": 1}],
-    "one-var": 0,
-    "no-fallthrough": 0
-  }
-}
