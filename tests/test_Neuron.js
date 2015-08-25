@@ -1,9 +1,15 @@
+/* eslint-env mocha */
+/* eslint no-unused-expressions:0 */
+/* eslint camelcase:0 */
+
 import chai from 'chai';
 import sinon from 'sinon';
 import Neuron from '../src/Neuron';
 import Listener from '../src/Listener';
 import Request from '../src/Request';
 import Response from '../src/Response';
+
+chai.should();
 
 var robot = {
   id: 'UR08OT',
@@ -12,14 +18,14 @@ var robot = {
     mentionToRespond: true,
     skipDMMention: true
   }
-}
+};
 
 describe('lib/Neuron', () => {
   var requestMock = {
     message: {
       text: 'Yo dawg',
       isDirect: false,
-      withMention: false,
+      withMention: false
     },
     user: {
       id: 'U28RF4HEW',
@@ -32,8 +38,7 @@ describe('lib/Neuron', () => {
   };
   var responseMock = {
     send: sinon.spy(),
-    sendText: sinon.spy(),
-    sendTextDM: sinon.spy(),
+    sendDM: sinon.spy(),
     reply: sinon.spy()
   };
   var requestGenerator, responseGenerator;
@@ -48,8 +53,7 @@ describe('lib/Neuron', () => {
     responseGenerator.reset();
 
     responseMock.send.reset();
-    responseMock.sendText.reset();
-    responseMock.sendTextDM.reset();
+    responseMock.sendDM.reset();
     responseMock.reply.reset();
   });
 
@@ -102,7 +106,6 @@ describe('lib/Neuron', () => {
     dispatchStub.callCount.should.be.equal(0);
     dispatchStub.restore();
   });
-
 
   it('should ignore message from self', () => {
     var selfMessage = Object.assign({}, requestMock, {
@@ -260,7 +263,7 @@ describe('lib/Neuron', () => {
     var neuron = new Neuron(robot);
     neuron.handle();
 
-    responseMock.sendText.should.be.calledWith('There is no command available yet');
+    responseMock.send.should.be.calledWith({text: 'There is no command available yet'});
   });
 
   it('should be able to show help for every listener', () => {
@@ -283,7 +286,16 @@ describe('lib/Neuron', () => {
     neuron.handle();
 
     var helpText = 'just testing\nCommand: *test*\n\nanother test\nCommand: *testing :something in :environment*';
-    responseMock.sendText.should.be.calledWith(helpText);
+    var expectedResponse = {
+      attachments: [
+        {
+          fallback: 'Available commands:',
+          title: 'Available commands:',
+          text: helpText
+        }
+      ]
+    };
+    responseMock.send.should.be.calledWith(expectedResponse);
   });
 
   it('should be able to skip help without description', () => {
@@ -306,7 +318,16 @@ describe('lib/Neuron', () => {
     neuron.handle();
 
     var helpText = 'just testing\nCommand: *test*';
-    responseMock.sendText.should.be.calledWith(helpText);
+    var expectedResponse = {
+      attachments: [
+        {
+          fallback: 'Available commands:',
+          title: 'Available commands:',
+          text: helpText
+        }
+      ]
+    };
+    responseMock.send.should.be.calledWith(expectedResponse);
   });
 
   it('should be able to respond if no commands have a descrption', () => {
@@ -329,7 +350,7 @@ describe('lib/Neuron', () => {
     neuron.handle();
 
     var helpText = 'Sorry, no description yet for any available commands';
-    responseMock.sendText.should.be.calledWith(helpText);
+    responseMock.send.should.be.calledWith({text: helpText});
   });
 
   it('should be able to respond using "show help"', () => {
@@ -345,7 +366,7 @@ describe('lib/Neuron', () => {
 
     var neuron = new Neuron(robot);
     neuron.handle();
-    responseMock.sendText.should.be.calledOnce;
+    responseMock.send.should.be.calledOnce;
   });
 
   it('should be able to notify user when asking for help in channel/group', () => {
@@ -362,7 +383,7 @@ describe('lib/Neuron', () => {
     var neuron = new Neuron(robot);
     neuron.handle();
     responseMock.reply.should.be.calledWith('please check your direct message');
-    responseMock.sendTextDM.should.be.calledOnce;
+    responseMock.sendDM.should.be.calledOnce;
   });
 
   it('should be able to respond if there is no matching listener', () => {
@@ -458,5 +479,4 @@ describe('lib/Neuron', () => {
       });
     });
   });
-
 });

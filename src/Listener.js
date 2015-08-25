@@ -1,4 +1,5 @@
 /* @flow */
+/* eslint prefer-reflect:0 */
 import Robot from './Robot';
 import Request from './Request';
 import Response from './Response';
@@ -131,7 +132,7 @@ class Listener {
     // we only care about other matches so we remove it from result
     matches.shift();
 
-    return Reflect.apply(Array.prototype.slice, matches);
+    return Array.prototype.slice.call(matches);
   }
 }
 

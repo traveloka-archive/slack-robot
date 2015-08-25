@@ -1,24 +1,25 @@
+/* eslint-env mocha */
 import chai from 'chai';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
-import chai_as_promised from 'chai-as-promised';
+import chaiAsPromised from 'chai-as-promised';
 import Request from '../src/Request';
 
 chai.use(sinonChai);
-chai.use(chai_as_promised);
+chai.use(chaiAsPromised);
 var should = chai.should();
 
 var slack = {
   getUserByID: sinon.stub(),
   getChannelByID: sinon.stub(),
   getChannelGroupOrDMByID: sinon.stub()
-}
+};
 var slackMessage = {
   text: 'Hey @fe-bot, See <@U999> in <#C999>',
   channel: 'C238EYDH',
   user: 'U233REWD',
   getChannelType: sinon.stub()
-}
+};
 var robotMention = /.*@fe-bot,?:?/;
 var channelInstanceMock = {id: 'C238EYDH', name: 'secret-base', postMessage: sinon.spy()};
 var userInstanceMock = {id: 'U233REWD', name: 'someuser'};
@@ -37,7 +38,7 @@ describe('lib/Request', () => {
     slack.getChannelByID.withArgs('C999').returns(c999Mock);
   });
 
-  it('should be able to set message object', function() {
+  it('should be able to set message object', () => {
     var expectedMessage = {
       text: 'See @nein in #nei-ne',
       isDirect: true,
@@ -52,7 +53,7 @@ describe('lib/Request', () => {
     req.message.should.be.deep.equal(expectedMessage);
   });
 
-  it('should be able to set user object', function() {
+  it('should be able to set user object', () => {
     var expectedUser = {
       id: 'U233REWD',
       name: 'someuser'
@@ -66,7 +67,7 @@ describe('lib/Request', () => {
     req.user.should.be.deep.equal(expectedUser);
   });
 
-  it('should not set user property if not found', function() {
+  it('should not set user property if not found', () => {
     slack.getChannelGroupOrDMByID.withArgs(slackMessage.channel).returns(channelInstanceMock);
     slack.getUserByID.withArgs(slackMessage.user).returns(undefined);
 
@@ -76,7 +77,7 @@ describe('lib/Request', () => {
     should.exist(req.channel);
   });
 
-  it('should be able to set channel object', function() {
+  it('should be able to set channel object', () => {
     var expectedChannel = {
       id: 'C238EYDH',
       name: 'secret-base'
@@ -90,7 +91,7 @@ describe('lib/Request', () => {
     req.channel.should.be.deep.equal(expectedChannel);
   });
 
-  it('should not set channel property if not found', function() {
+  it('should not set channel property if not found', () => {
     slack.getChannelGroupOrDMByID.withArgs(slackMessage.channel).returns(undefined);
     slack.getUserByID.withArgs(slackMessage.user).returns(userInstanceMock);
 
@@ -100,7 +101,7 @@ describe('lib/Request', () => {
     should.not.exist(req.channel);
   });
 
-  it('should work regardless of message', function() {
+  it('should work regardless of message', () => {
     var message = Object.assign(slackMessage, {
       text: ''
     });
@@ -112,7 +113,7 @@ describe('lib/Request', () => {
     req.message.text.should.be.equal('');
   });
 
-  it('should work using label mention', function() {
+  it('should work using label mention', () => {
     var message = Object.assign(slackMessage, {
       text: '<@U999|@nein> <#C999|#nei-ne>'
     });
@@ -124,7 +125,7 @@ describe('lib/Request', () => {
     req.message.text.should.be.equal('@nein #nei-ne');
   });
 
-  it('should work on link and group', function() {
+  it('should work on link and group', () => {
     var message = Object.assign(slackMessage, {
       text: '<!group> <hahaha> <yolo|lol>'
     });
@@ -135,5 +136,4 @@ describe('lib/Request', () => {
     req.parse(message);
     req.message.text.should.be.equal('@group hahaha lol(yolo)');
   });
-
 });

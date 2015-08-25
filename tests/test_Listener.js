@@ -1,28 +1,22 @@
+/* eslint-env mocha */
 import chai from 'chai';
 import sinon from 'sinon';
-import sinon_chai from 'sinon-chai';
-import chai_as_promised from 'chai-as-promised';
-import Response from '../src/Response';
+import sinonChai from 'sinon-chai';
+import chaiAsPromised from 'chai-as-promised';
 import Listener from '../src/Listener';
 
-chai.use(sinon_chai);
-chai.use(chai_as_promised);
+chai.use(sinonChai);
+chai.use(chaiAsPromised);
 chai.should();
 
 var robot = {
-  slack_: {},
-  brain : {},
+  _slack: {},
+  brain: {},
   logger: {
     info: sinon.spy()
   }
-}
+};
 var messageFormat = 'test';
-
-class FakeAction extends Response {
-  constructor(robot) {
-    super(robot);
-  }
-}
 
 describe('lib/Listener', () => {
   it('should be able to create a matcher from string', () => {
@@ -58,8 +52,8 @@ describe('lib/Listener', () => {
   it('should validate description', () => {
     var descriptionError = 'Description must be non-empty string';
     var neuronListener = new Listener(robot, messageFormat);
-    var wrongDescription1 = () => { neuronListener.desc(''); }
-    var wrongDescription2 = () => { neuronListener.desc({key: 'value'}); }
+    var wrongDescription1 = () => neuronListener.desc('');
+    var wrongDescription2 = () => neuronListener.desc({key: 'value'});
 
     wrongDescription1.should.throw(descriptionError);
     wrongDescription2.should.throw(descriptionError);
@@ -76,15 +70,15 @@ describe('lib/Listener', () => {
   it('should validate acl callback', () => {
     var aclError = 'ACL callback must be a function';
     var neuronListener = new Listener(robot, messageFormat);
-    var wrongAcl1 = () => { neuronListener.acl({not: 'a function'}); }
-    var wrongAcl2 = () => { neuronListener.acl(['1']); }
+    var wrongAcl1 = () => neuronListener.acl({not: 'a function'});
+    var wrongAcl2 = () => neuronListener.acl(['1']);
 
     wrongAcl1.should.throw(aclError);
     wrongAcl2.should.throw(aclError);
   });
 
   it('should be able to add action', () => {
-    function action() {};
+    function action() {}
     var neuronListener = new Listener(robot, messageFormat);
     neuronListener.handler(action);
 
@@ -100,8 +94,8 @@ describe('lib/Listener', () => {
   it('should validate action callback', () => {
     var actionError = 'Action must be a function';
     var neuronListener = new Listener(robot, messageFormat);
-    var wrongAction1 = () => { neuronListener.handler('not a function'); }
-    var wrongAction2 = () => { neuronListener.handler(new Error()); }
+    var wrongAction1 = () => neuronListener.handler('not a function');
+    var wrongAction2 = () => neuronListener.handler(new Error());
 
     wrongAction1.should.throw(actionError);
     wrongAction2.should.throw(actionError);
@@ -174,7 +168,7 @@ describe('lib/Listener', () => {
       }
     };
     var res = {};
-    var aclFn = () => { return true };
+    var aclFn = () => true;
 
     var neuronListener = new Listener(robot, messageFormat);
     neuronListener.acl(aclFn);
@@ -200,7 +194,7 @@ describe('lib/Listener', () => {
     var neuronListener = new Listener(robot, messageFormat);
     neuronListener.acl(aclFn);
 
-    var response = neuronListener.respondTo(req, res);
+    neuronListener.respondTo(req, res);
     aclFn.should.be.calledWith(req, res);
   });
 
@@ -236,7 +230,7 @@ describe('lib/Listener', () => {
     };
     var res = {};
     var errorMessage = 'random action execution';
-    var errorMock = new Error(errorMock);
+    var errorMock = new Error(errorMessage);
     var action = sinon.stub().returns(Promise.reject(errorMock));
     var neuronListener = new Listener(robot, messageFormat);
 
@@ -280,5 +274,4 @@ describe('lib/Listener', () => {
 
     neuronListener._getMatches(messageText).should.be.deep.equal(expectedMatches);
   });
-
 });

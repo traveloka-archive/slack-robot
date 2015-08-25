@@ -1,3 +1,6 @@
+/* eslint-env mocha */
+/* eslint no-unused-expressions:0 */
+/* eslint no-new:0 */
 import chai from 'chai';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
@@ -41,7 +44,7 @@ describe('lib/Robot', () => {
   });
 
   it('should accept token string in constructor', () => {
-    new Robot(SLACK_ACCESS_TOKEN);
+    (() => new Robot(SLACK_ACCESS_TOKEN))();
     slackLoginStub.should.be.calledOnce;
   });
 
@@ -52,9 +55,9 @@ describe('lib/Robot', () => {
 
   it('should throw error if no token is defined', () => {
     var expectedError = 'Invalid slack access token';
-    function undefinedToken() { new Robot() }
-    function nullToken() { new Robot(null) }
-    function noTokenProperty() { new Robot({}) }
+    var undefinedToken = () => new Robot();
+    var nullToken = () => new Robot(null);
+    var noTokenProperty = () => new Robot({});
 
     undefinedToken.should.throw(expectedError);
     nullToken.should.throw(expectedError);

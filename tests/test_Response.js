@@ -1,11 +1,13 @@
+/* eslint-env mocha */
+/* eslint camelcase:0 */
 import chai from 'chai';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
-import chai_as_promised from 'chai-as-promised';
+import chaiAsPromised from 'chai-as-promised';
 import Response from '../src/Response';
 
 chai.use(sinonChai);
-chai.use(chai_as_promised);
+chai.use(chaiAsPromised);
 chai.should();
 
 var slack = {
@@ -14,11 +16,11 @@ var slack = {
   getChannelGroupOrDMByName: sinon.stub(),
   getUserByID: sinon.stub(),
   getDMByID: sinon.stub()
-}
+};
 var slackMessage = {
   channel: 'C238EYDH',
   user: 'U233REWD'
-}
+};
 var channelInstanceMock = {name: 'Some channel', postMessage: sinon.spy()};
 var userInstanceMock = {id: 'U233REWD', name: 'someuser'};
 
@@ -35,7 +37,7 @@ describe('lib/Response', () => {
     slack.getUserByID.withArgs(slackMessage.user).returns(userInstanceMock);
   });
 
-  it('should be able to set channel and user instance', function() {
+  it('should be able to set channel and user instance', () => {
     var res = new Response(slack);
     res.parse(slackMessage);
     res._channel.should.be.deep.equal(channelInstanceMock);
@@ -136,7 +138,7 @@ describe('lib/Response', () => {
 
     res.parse(slackMessage);
     res.sendTextTo('#general', message).then(() => {
-      chatStub.postMessage.should.be.calledWith({as_user: true, text: 'message for <#channel> or <!group>'})
+      chatStub.postMessage.should.be.calledWith({as_user: true, text: 'message for <#channel> or <!group>'});
       done();
     });
   });
