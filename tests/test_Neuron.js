@@ -291,7 +291,8 @@ describe('lib/Neuron', () => {
         {
           fallback: 'Available commands:',
           title: 'Available commands:',
-          text: helpText
+          text: helpText,
+          mrkdwn_in: ['text']
         }
       ]
     };
@@ -323,7 +324,8 @@ describe('lib/Neuron', () => {
         {
           fallback: 'Available commands:',
           title: 'Available commands:',
-          text: helpText
+          text: helpText,
+          mrkdwn_in: ['text']
         }
       ]
     };
@@ -466,7 +468,9 @@ describe('lib/Neuron', () => {
 
     var neuron = new Neuron(robot);
     neuron.listeners = [listenerMock];
-    neuron.handle().then(() => {
+
+    // testing private method because async
+    neuron._dispatchHandler(needListener, responseMock).then(() => {
       responseMock.send.should.be.calledWith({
         as_user: true,
         attachments: [

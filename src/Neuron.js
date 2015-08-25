@@ -1,4 +1,5 @@
 /* @flow */
+/* eslint camelcase:0 */
 import Slack from 'slack-client';
 import Robot from './Robot';
 import Listener from './Listener';
@@ -59,9 +60,7 @@ class Neuron {
       }
     }
 
-    /* eslint-disable */
-    return this._dispatchHandler(req, res);
-    /* eslint-enable */
+    this._dispatchHandler(req, res);
   }
 
   _dispatchHandler(req: Request, res: Response) {
@@ -126,7 +125,8 @@ class Neuron {
         {
           fallback: 'Available commands:',
           title: 'Available commands:',
-          text: helpText.trim()
+          text: helpText.trim(),
+          mrkdwn_in: ['text']
         }
       ]
     };
@@ -134,9 +134,7 @@ class Neuron {
 
   getExecutionErrorResponse_(errorMessage: string): Slack.Response {
     return {
-      /* eslint-disable */
       as_user: true,
-      /* eslint-enable */
       attachments: [
         {
           title: 'There\s an error when executing your command',
