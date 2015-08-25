@@ -92,19 +92,19 @@ class Neuron {
     var helpText = this._convertHandlerAsHelp();
 
     if (req.message.isDirect) {
-      return res.sendText(helpText);
+      return res.send(helpText);
     }
 
     // do not show help text directly in channel, use direct message instead
     res.reply('please check your direct message');
-    return res.sendTextDM(helpText);
+    return res.sendDM(helpText);
   }
 
-  _convertHandlerAsHelp(): string {
+  _convertHandlerAsHelp(): Object {
     var helpText = '';
 
     if (!this.listeners.length) {
-      return 'There is no command available yet';
+      return {text: 'There is no command available yet'};
     }
 
     for (var i = 0; i < this.listeners.length; i++) {
@@ -118,10 +118,18 @@ class Neuron {
     }
 
     if (!helpText) {
-      helpText = 'Sorry, no description yet for any available commands';
+      return {text: 'Sorry, no description yet for any available commands'};
     }
 
-    return helpText.trim();
+    return {
+      attachments: [
+        {
+          fallback: 'Available commands:',
+          title: 'Available commands:',
+          text: helpText.trim()
+        }
+      ]
+    };
   }
 
   getExecutionErrorResponse_(errorMessage: string): Slack.Response {
