@@ -1,6 +1,6 @@
 {
   "name": "slack-robot",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "Simple robot for your slack integration",
   "main": "lib/Robot.js",
   "scripts": {
@@ -12,7 +12,10 @@
     "prepublish": "babel -d lib/ src/"
   },
   "marlint": {
-    "ignores": ["lib/*.js", "tests/*.js"],
+    "ignores": [
+      "lib/*.js",
+      "tests/*.js"
+    ],
     "rules": {
       "no-fallthrough": 0
     }
