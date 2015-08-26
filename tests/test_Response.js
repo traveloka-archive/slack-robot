@@ -15,7 +15,7 @@ var slack = {
   getChannelGroupOrDMByID: sinon.stub(),
   getChannelGroupOrDMByName: sinon.stub(),
   getUserByID: sinon.stub(),
-  getDMByID: sinon.stub()
+  getDMByName: sinon.stub()
 };
 var slackMessage = {
   channel: 'C238EYDH',
@@ -30,7 +30,7 @@ describe('lib/Response', () => {
     slack.getUserByID.reset();
     slack.getChannelGroupOrDMByID.reset();
     slack.getChannelGroupOrDMByName.reset();
-    slack.getDMByID.reset();
+    slack.getDMByName.reset();
     channelInstanceMock.postMessage.reset();
 
     slack.getChannelGroupOrDMByID.withArgs(slackMessage.channel).returns(channelInstanceMock);
@@ -73,7 +73,7 @@ describe('lib/Response', () => {
     // prepare stub
     var dmStub = {postMessage: sinon.stub()};
     slack.openDM.callsArgWith(1);
-    slack.getDMByID.returns(dmStub);
+    slack.getDMByName.returns(dmStub);
 
     res.parse(slackMessage);
     res.sendDM(response).then(() => {
@@ -90,7 +90,7 @@ describe('lib/Response', () => {
     // prepare stub
     var dmStub = {postMessage: sinon.stub()};
     slack.openDM.callsArgWith(1);
-    slack.getDMByID.returns(dmStub);
+    slack.getDMByName.returns(dmStub);
 
     res.parse(slackMessage);
     res.sendTextDM(message).then(() => {
@@ -106,7 +106,7 @@ describe('lib/Response', () => {
 
     // prepare stub
     slack.openDM.callsArgWith(1);
-    slack.getDMByID.returns(undefined);
+    slack.getDMByName.returns(undefined);
 
     res.parse(slackMessage);
     return res.sendTextDM(message).should.be.rejected;
