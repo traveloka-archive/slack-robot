@@ -34,7 +34,7 @@ export default class Response {
   }
 
   sendText(text: string): Promise {
-    return this.send({text});
+    return this.send({ text });
   }
 
   sendDM(response: Slack.Response): Promise {
@@ -59,7 +59,7 @@ export default class Response {
   }
 
   sendTextDM(text: string): Promise {
-    return this.sendDM({text});
+    return this.sendDM({ text });
   }
 
   sendTo(name: string, response: Slack.Response): Promise {
@@ -78,7 +78,7 @@ export default class Response {
   }
 
   sendTextTo(name: string, text: string): Promise {
-    return this.sendTo(name, {text});
+    return this.sendTo(name, { text });
   }
 
   reply(text: string): Promise {

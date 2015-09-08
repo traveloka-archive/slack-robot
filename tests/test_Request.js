@@ -53,6 +53,26 @@ describe('lib/Request', () => {
     req.message.should.be.deep.equal(expectedMessage);
   });
 
+  it('should be able to ignore extra space', () => {
+    var expectedMessage = {
+      text: 'See     @nein      in     #nei-ne',
+      isDirect: true,
+      withMention: true
+    };
+    var expectedResult = {
+      text: 'See @nein in #nei-ne',
+      isDirect: true,
+      withMention: true
+    };
+
+    slack.getChannelGroupOrDMByID.withArgs(slackMessage.channel).returns(channelInstanceMock);
+    slack.getUserByID.withArgs(slackMessage.user).returns(userInstanceMock);
+
+    var req = new Request(slack, robotMention);
+    req.parse(slackMessage);
+    req.message.should.be.deep.equal(expectedResult);
+  });
+
   it('should be able to set user object', () => {
     var expectedUser = {
       id: 'U233REWD',

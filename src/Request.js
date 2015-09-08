@@ -45,7 +45,6 @@ class Request {
     this.message = this._createMessageObject(slackMessage, this._botMention);
     this.user = this._createUserObject(slackMessage);
     this.channel = this._createChannelObject(slackMessage);
-
     return this;
   }
 
@@ -92,10 +91,10 @@ class Request {
           return link;
       }
     });
+    text = text.split(' ').filter(x => x !== '').join(' ');
     text = text.replace(/&lt;/g, '<');
     text = text.replace(/&gt;/g, '>');
     text = text.replace(/&amp;/g, '&');
-
     return {
       text: text.replace(botMention, '').trim(),
       isDirect: slackMessage.getChannelType() === 'DM',

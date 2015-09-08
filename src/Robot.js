@@ -39,7 +39,7 @@ export default class Robot {
     }
 
     if (typeof slackOptions === 'string') {
-      slackOptions = this._mergeSlackOptions({token: slackOptions});
+      slackOptions = this._mergeSlackOptions({ token: slackOptions });
     } else {
       slackOptions = this._mergeSlackOptions(slackOptions);
     }

@@ -69,7 +69,7 @@ class Neuron {
     }
 
     var listener;
-    var listenerResponse = {match: false, allowed: false};
+    var listenerResponse = { match: false, allowed: false };
     for (var i = 0; i < this.listeners.length; i++) {
       listener = this.listeners[i];
       listenerResponse = listener.respondTo(req, res);
@@ -103,7 +103,7 @@ class Neuron {
     var helpText = '';
 
     if (!this.listeners.length) {
-      return {text: 'There is no command available yet'};
+      return { text: 'There is no command available yet' };
     }
 
     for (var i = 0; i < this.listeners.length; i++) {
@@ -117,7 +117,7 @@ class Neuron {
     }
 
     if (!helpText) {
-      return {text: 'Sorry, no description yet for any available commands'};
+      return { text: 'Sorry, no description yet for any available commands' };
     }
 
     return {

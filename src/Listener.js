@@ -63,7 +63,7 @@ class Listener {
 
   respondTo(req: Request, res: Response): ListenerResponse {
     if (!(req.message.text.match(this.matcher))) {
-      return {match: false, allowed: false};
+      return { match: false, allowed: false };
     }
 
     if (req.user && req.user.name) {
@@ -75,10 +75,10 @@ class Listener {
 
     if (typeof this.aclFn === 'function') {
       var allowed = this.aclFn(req, res);
-      return {match: true, allowed};
+      return { match: true, allowed };
     }
 
-    return {match: true, allowed: true};
+    return { match: true, allowed: true };
   }
 
   _createCommandInfo(messageFormat: string|RegExp): string {
