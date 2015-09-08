@@ -15,7 +15,7 @@ var slack = {
   getChannelGroupOrDMByID: sinon.stub()
 };
 var slackMessage = {
-  text: 'Hey @fe-bot, See <@U999> in <#C999>',
+  text: 'Hey @fe-bot,        See         <@U999> in <#C999>',
   channel: 'C238EYDH',
   user: 'U233REWD',
   getChannelType: sinon.stub()
@@ -53,24 +53,18 @@ describe('lib/Request', () => {
     req.message.should.be.deep.equal(expectedMessage);
   });
 
-  it('should be able to ignore extra space', () => {
-    var expectedMessage = {
-      text: 'See     @nein      in     #nei-ne',
-      isDirect: true,
-      withMention: true
-    };
-    var expectedResult = {
+  it('should be able to ignore extra space', () => {    
+     var expectedMessage = {
       text: 'See @nein in #nei-ne',
       isDirect: true,
       withMention: true
     };
 
     slack.getChannelGroupOrDMByID.withArgs(slackMessage.channel).returns(channelInstanceMock);
-    slack.getUserByID.withArgs(slackMessage.user).returns(userInstanceMock);
-
+    slack.getUserByID.withArgs(slackMessage.user).returns(userInstanceMock);    
     var req = new Request(slack, robotMention);
     req.parse(slackMessage);
-    req.message.should.be.deep.equal(expectedResult);
+    req.message.should.be.deep.equal(expectedMessage);
   });
 
   it('should be able to set user object', () => {
