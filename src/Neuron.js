@@ -110,7 +110,7 @@ class Neuron {
       var listener = this.listeners[i];
 
       if (listener.description) {
-        helpText += listener.description + '\n';
+        helpText += `${listener.description}\n`;
         helpText += `Command: *${listener.commandInfo}*\n`;
         helpText += '\n';
       }
@@ -139,7 +139,8 @@ class Neuron {
         {
           title: 'There\s an error when executing your command',
           text: `Error message: ${errorMessage}`,
-          color: 'danger'
+          color: 'danger',
+          mrkdwn_in: ['text']
         }
       ]
     };

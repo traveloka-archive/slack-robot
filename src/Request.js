@@ -65,7 +65,7 @@ class Request {
           }
           user = this._slack.getUserByID(link);
           if (user) {
-            return '@' + user.name;
+            return `@${user.name}`;
           }
 
         case '#':
@@ -75,18 +75,18 @@ class Request {
 
           channel = this._slack.getChannelByID(link);
           if (channel) {
-            return '#' + channel.name;
+            return `#${channel.name}`;
           }
 
         case '!':
           if (['channel', 'group', 'everyone'].indexOf(link) !== -1) {
-            return '@' + link;
+            return `@${link}`;
           }
 
         default:
           link = link.replace('/^mailto:/', '');
           if ((label) && (link.indexOf(label) === -1)) {
-            return label + '(' + link + ')';
+            return `${label}(${link})`;
           }
           return link;
       }

@@ -477,7 +477,8 @@ describe('lib/Neuron', () => {
           {
             title: 'There\s an error when executing your command',
             text: `Error message: Execution error`,
-            color: 'danger'
+            color: 'danger',
+            mrkdwn_in: ['text']
           }
         ]
       });

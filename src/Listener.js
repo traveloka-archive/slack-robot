@@ -117,7 +117,7 @@ class Listener {
     });
 
     for (var i = 0; i < payloadList.length; i++) {
-      var regexIndex = '$' + (i + 1);
+      var regexIndex = `$${(i + 1)}`;
       var payloadName = payloadList[i];
       payload[payloadName] = messageText.replace(this.matcher, regexIndex);
     }

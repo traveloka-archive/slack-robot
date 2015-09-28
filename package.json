@@ -4,7 +4,7 @@
   "description": "Simple robot for your slack integration",
   "main": "lib/Robot.js",
   "scripts": {
-    "lint": "marlint",
+    "lint": "marlint src/**/*.js",
     "unit": "mocha --compilers js:babel/register tests/**/**/*.js",
     "test": "npm run lint && npm run unit",
     "coverage": "istanbul cover _mocha tests/**/*.js -- --compilers js:babel/register",
