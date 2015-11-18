@@ -64,7 +64,7 @@ export default class Robot {
   }
 
   _mergeSlackOptions(options: Object) : SlackOptions {
-    var DEFAULT_OPTS = {
+    const DEFAULT_OPTS = {
       autoReconnect: true,
       autoMark: true
     };
@@ -73,7 +73,7 @@ export default class Robot {
   }
 
   _mergeRobotOptions(options: Object) : RobotOptions {
-    var DEFAULT_OPTS = {
+    const DEFAULT_OPTS = {
       ignoreMessageInGeneral: true,
       mentionToRespond: true,
       skipDMMention: true

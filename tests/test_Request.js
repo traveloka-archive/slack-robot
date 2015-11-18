@@ -7,24 +7,24 @@ import Request from '../src/Request';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
-var should = chai.should();
+const should = chai.should();
 
-var slack = {
+const slack = {
   getUserByID: sinon.stub(),
   getChannelByID: sinon.stub(),
   getChannelGroupOrDMByID: sinon.stub()
 };
-var slackMessage = {
+const slackMessage = {
   text: 'Hey @fe-bot, See <@U999> in <#C999>',
   channel: 'C238EYDH',
   user: 'U233REWD',
   getChannelType: sinon.stub()
 };
-var robotMention = /.*@fe-bot,?:?/;
-var channelInstanceMock = {id: 'C238EYDH', name: 'secret-base', postMessage: sinon.spy()};
-var userInstanceMock = {id: 'U233REWD', name: 'someuser'};
-var u999Mock = {id: 'U999', name: 'nein'};
-var c999Mock = {id: 'C999', name: 'nei-ne'};
+const robotMention = /.*@fe-bot,?:?/;
+const channelInstanceMock = { id: 'C238EYDH', name: 'secret-base', postMessage: sinon.spy() };
+const userInstanceMock = { id: 'U233REWD', name: 'someuser' };
+const u999Mock = { id: 'U999', name: 'nein' };
+const c999Mock = { id: 'C999', name: 'nei-ne' };
 
 describe('lib/Request', () => {
   beforeEach(() => {
@@ -39,7 +39,7 @@ describe('lib/Request', () => {
   });
 
   it('should be able to set message object', () => {
-    var expectedMessage = {
+    const expectedMessage = {
       text: 'See @nein in #nei-ne',
       isDirect: true,
       withMention: true
@@ -48,35 +48,35 @@ describe('lib/Request', () => {
     slack.getChannelGroupOrDMByID.withArgs(slackMessage.channel).returns(channelInstanceMock);
     slack.getUserByID.withArgs(slackMessage.user).returns(userInstanceMock);
 
-    var req = new Request(slack, robotMention);
+    const req = new Request(slack, robotMention);
     req.parse(slackMessage);
     req.message.should.be.deep.equal(expectedMessage);
   });
 
-  it('should be able to ignore extra space', () => {    
-     var expectedMessage = {
+  it('should be able to ignore extra space', () => {
+    const expectedMessage = {
       text: 'See @nein in #nei-ne',
       isDirect: true,
       withMention: true
     };
 
-    var slackMessage = {
+    const slackMessage = {
       text: 'Hey @fe-bot, See     <@U999> in      <#C999>',
       channel: 'C238EYDH',
       user: 'U233REWD',
       getChannelType: sinon.stub()
     };
     slack.getChannelGroupOrDMByID.withArgs(slackMessage.channel).returns(channelInstanceMock);
-    slack.getUserByID.withArgs(slackMessage.user).returns(userInstanceMock); 
+    slack.getUserByID.withArgs(slackMessage.user).returns(userInstanceMock);
     slackMessage.getChannelType.returns('DM');
 
-    var req = new Request(slack, robotMention);
+    const req = new Request(slack, robotMention);
     req.parse(slackMessage);
     req.message.should.be.deep.equal(expectedMessage);
   });
 
   it('should be able to set user object', () => {
-    var expectedUser = {
+    const expectedUser = {
       id: 'U233REWD',
       name: 'someuser'
     };
@@ -84,7 +84,7 @@ describe('lib/Request', () => {
     slack.getChannelGroupOrDMByID.withArgs(slackMessage.channel).returns(channelInstanceMock);
     slack.getUserByID.withArgs(slackMessage.user).returns(userInstanceMock);
 
-    var req = new Request(slack, robotMention);
+    const req = new Request(slack, robotMention);
     req.parse(slackMessage);
     req.user.should.be.deep.equal(expectedUser);
   });
@@ -93,14 +93,14 @@ describe('lib/Request', () => {
     slack.getChannelGroupOrDMByID.withArgs(slackMessage.channel).returns(channelInstanceMock);
     slack.getUserByID.withArgs(slackMessage.user).returns(undefined);
 
-    var req = new Request(slack, robotMention);
+    const req = new Request(slack, robotMention);
     req.parse(slackMessage);
     should.not.exist(req.user);
     should.exist(req.channel);
   });
 
   it('should be able to set channel object', () => {
-    var expectedChannel = {
+    const expectedChannel = {
       id: 'C238EYDH',
       name: 'secret-base'
     };
@@ -108,7 +108,7 @@ describe('lib/Request', () => {
     slack.getChannelGroupOrDMByID.withArgs(slackMessage.channel).returns(channelInstanceMock);
     slack.getUserByID.withArgs(slackMessage.user).returns(userInstanceMock);
 
-    var req = new Request(slack, robotMention);
+    const req = new Request(slack, robotMention);
     req.parse(slackMessage);
     req.channel.should.be.deep.equal(expectedChannel);
   });
@@ -117,44 +117,44 @@ describe('lib/Request', () => {
     slack.getChannelGroupOrDMByID.withArgs(slackMessage.channel).returns(undefined);
     slack.getUserByID.withArgs(slackMessage.user).returns(userInstanceMock);
 
-    var req = new Request(slack, robotMention);
+    const req = new Request(slack, robotMention);
     req.parse(slackMessage);
     should.exist(req.user);
     should.not.exist(req.channel);
   });
 
   it('should work regardless of message', () => {
-    var message = Object.assign(slackMessage, {
+    const message = Object.assign(slackMessage, {
       text: ''
     });
     slack.getChannelGroupOrDMByID.withArgs(slackMessage.channel).returns(undefined);
     slack.getUserByID.withArgs(slackMessage.user).returns(userInstanceMock);
 
-    var req = new Request(slack, robotMention);
+    const req = new Request(slack, robotMention);
     req.parse(message);
     req.message.text.should.be.equal('');
   });
 
   it('should work using label mention', () => {
-    var message = Object.assign(slackMessage, {
+    const message = Object.assign(slackMessage, {
       text: '<@U999|@nein> <#C999|#nei-ne>'
     });
     slack.getChannelGroupOrDMByID.withArgs(slackMessage.channel).returns(undefined);
     slack.getUserByID.withArgs(slackMessage.user).returns(userInstanceMock);
 
-    var req = new Request(slack, robotMention);
+    const req = new Request(slack, robotMention);
     req.parse(message);
     req.message.text.should.be.equal('@nein #nei-ne');
   });
 
   it('should work on link and group', () => {
-    var message = Object.assign(slackMessage, {
+    const message = Object.assign(slackMessage, {
       text: '<!group> <hahaha> <yolo|lol>'
     });
     slack.getChannelGroupOrDMByID.withArgs(slackMessage.channel).returns(undefined);
     slack.getUserByID.withArgs(slackMessage.user).returns(userInstanceMock);
 
-    var req = new Request(slack, robotMention);
+    const req = new Request(slack, robotMention);
     req.parse(message);
     req.message.text.should.be.equal('@group hahaha lol(yolo)');
   });

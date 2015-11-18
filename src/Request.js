@@ -49,7 +49,7 @@ class Request {
   }
 
   _createMessageObject(slackMessage: Slack.Message, botMention : RegExp): RequestMessage {
-    var text = slackMessage.text;
+    let text = slackMessage.text;
 
     if (!text) {
       text = '';
@@ -57,7 +57,7 @@ class Request {
 
     // Ref: https://github.com/slackhq/hubot-slack/blob/master/src/slack.coffee#L153
     text = text.replace(/<([@#!])?([^>|]+)(?:\|([^>]+))?>/g, (m, type, link, label) => {
-      var user, channel;
+      let user, channel;
       switch (type) {
         case '@':
           if (label) {
@@ -103,8 +103,8 @@ class Request {
   }
 
   _createUserObject(slackMessage: Slack.Message): ?RequestUser {
-    var user = {};
-    var slackUserObject: SlackUserObject = this._slack.getUserByID(slackMessage.user);
+    const user = {};
+    const slackUserObject: SlackUserObject = this._slack.getUserByID(slackMessage.user);
 
     if (!slackUserObject) {
       return null;
@@ -117,8 +117,8 @@ class Request {
   }
 
   _createChannelObject(slackMessage: Slack.Message): ?RequestChannel {
-    var channel = {};
-    var slackChannelObject = this._slack.getChannelGroupOrDMByID(slackMessage.channel);
+    const channel = {};
+    const slackChannelObject = this._slack.getChannelGroupOrDMByID(slackMessage.channel);
 
     if (!slackChannelObject) {
       return null;

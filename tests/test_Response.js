@@ -1,5 +1,4 @@
 /* eslint-env mocha */
-/* eslint camelcase:0 */
 import chai from 'chai';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
@@ -10,19 +9,19 @@ chai.use(sinonChai);
 chai.use(chaiAsPromised);
 chai.should();
 
-var slack = {
+const slack = {
   openDM: sinon.stub(),
   getChannelGroupOrDMByID: sinon.stub(),
   getChannelGroupOrDMByName: sinon.stub(),
   getUserByID: sinon.stub(),
   getDMByName: sinon.stub()
 };
-var slackMessage = {
+const slackMessage = {
   channel: 'C238EYDH',
   user: 'U233REWD'
 };
-var channelInstanceMock = {name: 'Some channel', postMessage: sinon.spy()};
-var userInstanceMock = {id: 'U233REWD', name: 'someuser'};
+const channelInstanceMock = { name: 'Some channel', postMessage: sinon.spy() };
+const userInstanceMock = { id: 'U233REWD', name: 'someuser' };
 
 describe('lib/Response', () => {
   beforeEach(() => {
@@ -38,71 +37,71 @@ describe('lib/Response', () => {
   });
 
   it('should be able to set channel and user instance', () => {
-    var res = new Response(slack);
+    const res = new Response(slack);
     res.parse(slackMessage);
     res._channel.should.be.deep.equal(channelInstanceMock);
     res._user.should.be.deep.equal(userInstanceMock);
   });
 
   it('should be able to send response to channel/group/DM', done => {
-    var res = new Response(slack);
-    var response = {key: 'value'};
+    const res = new Response(slack);
+    const response = { key: 'value' };
 
     res.parse(slackMessage);
     res.send(response).then(() => {
-      channelInstanceMock.postMessage.should.be.calledWith({as_user: true, key: 'value'});
+      channelInstanceMock.postMessage.should.be.calledWith({ as_user: true, key: 'value' });
       done();
     });
   });
 
   it('should be able to send text response to channel/group/DM', done => {
-    var res = new Response(slack);
-    var message = 'some text message';
+    const res = new Response(slack);
+    const message = 'some text message';
 
     res.parse(slackMessage);
     res.sendText(message).then(() => {
-      channelInstanceMock.postMessage.should.be.calledWith({as_user: true, text: message});
+      channelInstanceMock.postMessage.should.be.calledWith({ as_user: true, text: message });
       done();
     });
   });
 
   it('should be able to reply via DM', done => {
-    var res = new Response(slack);
-    var response = {via: 'dm'};
+    const res = new Response(slack);
+    const response = { via: 'dm' };
 
     // prepare stub
-    var dmStub = {postMessage: sinon.stub()};
+    const dmStub = { postMessage: sinon.stub() };
     slack.openDM.callsArgWith(1);
     slack.getDMByName.returns(dmStub);
 
     res.parse(slackMessage);
     res.sendDM(response).then(() => {
       slack.openDM.getCall(0).args[0].should.be.equal(userInstanceMock.id);
-      dmStub.postMessage.should.be.calledWith({as_user: true, via: 'dm'});
+      dmStub.postMessage.should.be.calledWith({ as_user: true, via: 'dm' });
       done();
     });
   });
 
   it('should be able to reply text via DM', done => {
-    var res = new Response(slack);
-    var message = 'text via dm';
+    const res = new Response(slack);
+    const message = 'text via dm';
 
     // prepare stub
-    var dmStub = {postMessage: sinon.stub()};
+    const dmStub = { postMessage: sinon.stub() };
     slack.openDM.callsArgWith(1);
     slack.getDMByName.returns(dmStub);
 
     res.parse(slackMessage);
     res.sendTextDM(message).then(() => {
       slack.openDM.getCall(0).args[0].should.be.equal(userInstanceMock.id);
-      dmStub.postMessage.should.be.calledWith({as_user: true, text: 'text via dm'});
+      dmStub.postMessage.should.be.calledWith({ as_user: true, text: 'text via dm' });
       done();
     });
   });
 
   it('should be reject promise if not able to reply dm', () => {
-    var res = new Response(slack);
-    var message = 'text via dm';
+    const res = new Response(slack);
+    const message = 'text via dm';
 
     // prepare stub
     slack.openDM.callsArgWith(1);
@@ -113,43 +112,43 @@ describe('lib/Response', () => {
   });
 
   it('should be able to send response to specific channel/group/dm instead of reply', done => {
-    var res = new Response(slack);
-    var response = {specific: 'channel/group/dm'};
+    const res = new Response(slack);
+    const response = { specific: 'channel/group/dm' };
 
     // prepare stub
-    var chatStub = {postMessage: sinon.stub()};
+    const chatStub = { postMessage: sinon.stub() };
     slack.getChannelGroupOrDMByName.returns(chatStub);
 
     res.parse(slackMessage);
     res.sendTo('#general', response).then(() => {
       slack.getChannelGroupOrDMByName.should.be.calledWith('#general');
-      chatStub.postMessage.should.be.calledWith({as_user: true, specific: 'channel/group/dm'});
+      chatStub.postMessage.should.be.calledWith({ as_user: true, specific: 'channel/group/dm' });
       done();
     });
   });
 
   it('should be able to send text to specific channel/group/DM', done => {
-    var res = new Response(slack);
-    var message = 'message for #channel or @group';
+    const res = new Response(slack);
+    const message = 'message for #channel or @group';
 
     // prepare stub
-    var chatStub = {postMessage: sinon.stub()};
+    const chatStub = { postMessage: sinon.stub() };
     slack.getChannelGroupOrDMByName.returns(chatStub);
 
     res.parse(slackMessage);
     res.sendTextTo('#general', message).then(() => {
-      chatStub.postMessage.should.be.calledWith({as_user: true, text: 'message for <#channel> or <!group>'});
+      chatStub.postMessage.should.be.calledWith({ as_user: true, text: 'message for <#channel> or <!group>' });
       done();
     });
   });
 
   it('should be able to reply to user', done => {
-    var res = new Response(slack);
-    var message = 'hula';
+    const res = new Response(slack);
+    const message = 'hula';
 
     res.parse(slackMessage);
     res.reply(message).then(() => {
-      channelInstanceMock.postMessage.should.be.calledWith({as_user: true, text: `<@${userInstanceMock.name}>: hula`});
+      channelInstanceMock.postMessage.should.be.calledWith({ as_user: true, text: `<@${userInstanceMock.name}>: hula` });
       done();
     });
   });
@@ -166,9 +165,9 @@ describe('lib/Response', () => {
   });
 
   it('should be throw error if reply using object', () => {
-    var res = new Response(slack);
-    var errorMessage = 'You can only reply using simple string';
-    var message = {x: 'x'};
+    const res = new Response(slack);
+    const errorMessage = 'You can only reply using simple string';
+    const message = { x: 'x' };
 
     res.parse(slackMessage);
     return res.reply(message).should.be.rejectedWith(errorMessage);

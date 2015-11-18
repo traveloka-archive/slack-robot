@@ -14,9 +14,9 @@ chai.should();
 
 describe('lib/Robot', () => {
   const SLACK_ACCESS_TOKEN = 'xqwd-0asdaus7dha3ejwdkajdnq3ui';
-  var botInfo = {id: 'x', name: 'x-men', mention: new RegExp('.*@x-men:?')};
-  var slackLoginStub, slackEventStub, slackGetTargetStub, slackGetChannelStub, slackGetUserStub;
-  var neuronStub;
+  const botInfo = { id: 'x', name: 'x-men', mention: new RegExp('.*@x-men:?') };
+  let slackLoginStub, slackEventStub, slackGetTargetStub, slackGetChannelStub, slackGetUserStub;
+  let neuronStub;
 
   before(() => {
     slackLoginStub = sinon.stub(Slack.prototype, 'login');
@@ -49,15 +49,15 @@ describe('lib/Robot', () => {
   });
 
   it('should accept slack option object in constructor', () => {
-    new Robot({token: SLACK_ACCESS_TOKEN});
+    new Robot({ token: SLACK_ACCESS_TOKEN });
     slackLoginStub.should.be.calledOnce;
   });
 
   it('should throw error if no token is defined', () => {
-    var expectedError = 'Invalid slack access token';
-    var undefinedToken = () => new Robot();
-    var nullToken = () => new Robot(null);
-    var noTokenProperty = () => new Robot({});
+    const expectedError = 'Invalid slack access token';
+    const undefinedToken = () => new Robot();
+    const nullToken = () => new Robot(null);
+    const noTokenProperty = () => new Robot({});
 
     undefinedToken.should.throw(expectedError);
     nullToken.should.throw(expectedError);
@@ -65,28 +65,28 @@ describe('lib/Robot', () => {
   });
 
   it('should get default robot options if not specified', () => {
-    var botDefaultOptions = {
+    const botDefaultOptions = {
       ignoreMessageInGeneral: true,
       mentionToRespond: true,
       skipDMMention: true
     };
 
-    var robot = new Robot(SLACK_ACCESS_TOKEN);
+    const robot = new Robot(SLACK_ACCESS_TOKEN);
     robot.options.should.be.deep.equal(botDefaultOptions);
   });
 
   it('should replace default robot options if specified', () => {
-    var customBotOption = {
+    const customBotOption = {
       mentionToRespond: false,
       skipDMMention: false
     };
-    var expectedBotOption = {
+    const expectedBotOption = {
       ignoreMessageInGeneral: true,
       mentionToRespond: false,
       skipDMMention: false
     };
 
-    var robot = new Robot(SLACK_ACCESS_TOKEN, customBotOption);
+    const robot = new Robot(SLACK_ACCESS_TOKEN, customBotOption);
     robot.options.should.be.deep.equal(expectedBotOption);
   });
 
@@ -96,10 +96,10 @@ describe('lib/Robot', () => {
   });
 
   it('should store bot information after login', () => {
-    var loggerStub = sinon.stub(Log.prototype, 'info');
+    const loggerStub = sinon.stub(Log.prototype, 'info');
     slackEventStub.withArgs('loggedIn').callsArgWith(1, botInfo);
 
-    var robot = new Robot(SLACK_ACCESS_TOKEN);
+    const robot = new Robot(SLACK_ACCESS_TOKEN);
 
     robot.id.should.be.deep.equal(botInfo.id);
     robot.name.should.be.deep.equal(botInfo.name);
@@ -110,28 +110,28 @@ describe('lib/Robot', () => {
   });
 
   it('should be able to add listener', () => {
-    var listenStub = sinon.stub(Neuron.prototype, 'listen');
+    const listenStub = sinon.stub(Neuron.prototype, 'listen');
 
-    var robot = new Robot(SLACK_ACCESS_TOKEN);
+    const robot = new Robot(SLACK_ACCESS_TOKEN);
     robot.listen('x');
 
     listenStub.should.be.calledWith('x');
   });
 
   it('should be pass message to neuron', () => {
-    var message = {text: 'test'};
+    const message = { text: 'test' };
 
     slackEventStub.withArgs('message').callsArgWith(1, message);
 
-    var robot = new Robot(SLACK_ACCESS_TOKEN);
+    const robot = new Robot(SLACK_ACCESS_TOKEN);
     robot.listen('x');
 
     neuronStub.should.be.calledWith(message);
   });
 
   it('should log error from slack', () => {
-    var loggerStub = sinon.stub(Log.prototype, 'error');
-    var error = 'Random slack error';
+    const loggerStub = sinon.stub(Log.prototype, 'error');
+    const error = 'Random slack error';
 
     slackEventStub.withArgs('error').callsArgWith(1, error);
 

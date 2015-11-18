@@ -1,5 +1,4 @@
 /* @flow */
-/* eslint camelcase:0 */
 import Slack from 'slack-client';
 import Robot from './Robot';
 import Listener from './Listener';
@@ -17,15 +16,15 @@ class Neuron {
   }
 
   listen(messageFormat: string|RegExp) {
-    var listener = new Listener(this._robot, messageFormat);
+    const listener = new Listener(this._robot, messageFormat);
     this.listeners.push(listener);
 
     return listener;
   }
 
   handle(slackMessage: Slack.Message) {
-    var req = new Request(this._robot._slack, this._robot.mention);
-    var res = new Response(this._robot._slack);
+    let req = new Request(this._robot._slack, this._robot.mention);
+    let res = new Response(this._robot._slack);
 
     req = req.parse(slackMessage);
     res = res.parse(slackMessage);
@@ -68,9 +67,9 @@ class Neuron {
       return this._showHelp(req, res);
     }
 
-    var listener;
-    var listenerResponse = { match: false, allowed: false };
-    for (var i = 0; i < this.listeners.length; i++) {
+    let listener;
+    let listenerResponse = { match: false, allowed: false };
+    for (let i = 0; i < this.listeners.length; i++) {
       listener = this.listeners[i];
       listenerResponse = listener.respondTo(req, res);
       if (listenerResponse.match) {
@@ -88,7 +87,7 @@ class Neuron {
   }
 
   _showHelp(req: Request, res: Response): Promise {
-    var helpText = this._convertHandlerAsHelp();
+    const helpText = this._convertHandlerAsHelp();
 
     if (req.message.isDirect) {
       return res.send(helpText);
@@ -100,14 +99,14 @@ class Neuron {
   }
 
   _convertHandlerAsHelp(): Object {
-    var helpText = '';
+    let helpText = '';
 
     if (!this.listeners.length) {
       return { text: 'There is no command available yet' };
     }
 
-    for (var i = 0; i < this.listeners.length; i++) {
-      var listener = this.listeners[i];
+    for (let i = 0; i < this.listeners.length; i++) {
+      const listener = this.listeners[i];
 
       if (listener.description) {
         helpText += `${listener.description}\n`;

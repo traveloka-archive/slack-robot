@@ -1,5 +1,4 @@
 /* @flow */
-/* eslint prefer-reflect:0 */
 import Robot from './Robot';
 import Request from './Request';
 import Response from './Response';
@@ -74,7 +73,7 @@ class Listener {
     req.matches = this._getMatches(req.message.text);
 
     if (typeof this.aclFn === 'function') {
-      var allowed = this.aclFn(req, res);
+      const allowed = this.aclFn(req, res);
       return { match: true, allowed };
     }
 
@@ -94,18 +93,18 @@ class Listener {
       return messageFormat;
     }
 
-    var messageExpression = messageFormat.replace(/:[a-zA-Z]+\(([^\)]*)\)/g, '($1)');
+    const messageExpression = messageFormat.replace(/:[a-zA-Z]+\(([^\)]*)\)/g, '($1)');
     return new RegExp(messageExpression);
   }
 
   _getParam(messageText: string): Object {
-    var payload = {};
+    const payload = {};
 
     if (this.messageFormat instanceof RegExp) {
       return payload;
     }
 
-    var payloadList = this.messageFormat.match(/:[a-zA-Z]+/g);
+    let payloadList = this.messageFormat.match(/:[a-zA-Z]+/g);
 
     if (!payloadList) {
       return payload;
@@ -116,9 +115,9 @@ class Listener {
       return v.replace(/^:/, '');
     });
 
-    for (var i = 0; i < payloadList.length; i++) {
-      var regexIndex = `$${(i + 1)}`;
-      var payloadName = payloadList[i];
+    for (let i = 0; i < payloadList.length; i++) {
+      const regexIndex = `$${(i + 1)}`;
+      const payloadName = payloadList[i];
       payload[payloadName] = messageText.replace(this.matcher, regexIndex);
     }
 
@@ -126,7 +125,7 @@ class Listener {
   }
 
   _getMatches(messageText: string): Array<string> {
-    var matches = messageText.match(this.matcher);
+    const matches = messageText.match(this.matcher);
 
     // first regex match always return the message and we don't need it
     // we only care about other matches so we remove it from result

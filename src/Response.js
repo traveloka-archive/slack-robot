@@ -48,7 +48,7 @@ export default class Response {
     return new Promise((resolve, reject) => {
       this._slack.openDM(this._user.id, () => {
         try {
-          var dm = this._slack.getDMByName(this._user.name);
+          const dm = this._slack.getDMByName(this._user.name);
           dm.postMessage(response);
           resolve();
         } catch (ex) {
@@ -71,7 +71,7 @@ export default class Response {
     }
 
     return new Promise(resolve => {
-      var target = this._slack.getChannelGroupOrDMByName(name);
+      const target = this._slack.getChannelGroupOrDMByName(name);
       target.postMessage(response);
       return resolve();
     });

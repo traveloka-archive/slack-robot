@@ -9,69 +9,69 @@ chai.use(sinonChai);
 chai.use(chaiAsPromised);
 chai.should();
 
-var robot = {
+const robot = {
   _slack: {},
   brain: {},
   logger: {
     info: sinon.spy()
   }
 };
-var messageFormat = 'test';
+const messageFormat = 'test';
 
 describe('lib/Listener', () => {
   it('should be able to create a matcher from string', () => {
-    var messageFormat = 'test :param([a-zA-Z]+) from :angle([0-9]{3})';
-    var neuronListener = new Listener(robot, messageFormat);
+    const messageFormat = 'test :param([a-zA-Z]+) from :angle([0-9]{3})';
+    const neuronListener = new Listener(robot, messageFormat);
     'test siPUt from 120'.should.match(neuronListener.matcher);
     'test kAMBin6 from 79'.should.not.match(neuronListener.matcher);
     'test kuda lumping from 135'.should.not.match(neuronListener.matcher);
   });
 
   it('should be able to create a matcher from regex', () => {
-    var messageFormat = /test ([a-zA-Z]+) from ([0-9]{3})/;
-    var neuronListener = new Listener(robot, messageFormat);
+    const messageFormat = /test ([a-zA-Z]+) from ([0-9]{3})/;
+    const neuronListener = new Listener(robot, messageFormat);
     'test siPUt from 120'.should.match(neuronListener.matcher);
     'test kAMBin6 from 79'.should.not.match(neuronListener.matcher);
     'test kuda lumping from 135'.should.not.match(neuronListener.matcher);
   });
 
   it('should be able to create a command info', () => {
-    var messageFormat = 'test :param([a-zA-Z]+) from :angle([0-9]{3})';
-    var neuronListener = new Listener(robot, messageFormat);
+    const messageFormat = 'test :param([a-zA-Z]+) from :angle([0-9]{3})';
+    const neuronListener = new Listener(robot, messageFormat);
     neuronListener.commandInfo.should.be.equal('test :param from :angle');
   });
 
   it('should be able to add description', () => {
-    var description = 'random description';
-    var neuronListener = new Listener(robot, messageFormat);
+    const description = 'random description';
+    const neuronListener = new Listener(robot, messageFormat);
     neuronListener.desc(description);
 
     neuronListener.description.should.be.equal(description);
   });
 
   it('should validate description', () => {
-    var descriptionError = 'Description must be non-empty string';
-    var neuronListener = new Listener(robot, messageFormat);
-    var wrongDescription1 = () => neuronListener.desc('');
-    var wrongDescription2 = () => neuronListener.desc({key: 'value'});
+    const descriptionError = 'Description must be non-empty string';
+    const neuronListener = new Listener(robot, messageFormat);
+    const wrongDescription1 = () => neuronListener.desc('');
+    const wrongDescription2 = () => neuronListener.desc({ key: 'value' });
 
     wrongDescription1.should.throw(descriptionError);
     wrongDescription2.should.throw(descriptionError);
   });
 
   it('should be able to add acl', () => {
-    var acl = sinon.spy();
-    var neuronListener = new Listener(robot, messageFormat);
+    const acl = sinon.spy();
+    const neuronListener = new Listener(robot, messageFormat);
     neuronListener.acl(acl);
 
     neuronListener.aclFn.should.be.equal(acl);
   });
 
   it('should validate acl callback', () => {
-    var aclError = 'ACL callback must be a function';
-    var neuronListener = new Listener(robot, messageFormat);
-    var wrongAcl1 = () => neuronListener.acl({not: 'a function'});
-    var wrongAcl2 = () => neuronListener.acl(['1']);
+    const aclError = 'ACL callback must be a function';
+    const neuronListener = new Listener(robot, messageFormat);
+    const wrongAcl1 = () => neuronListener.acl({ not: 'a function' });
+    const wrongAcl2 = () => neuronListener.acl(['1']);
 
     wrongAcl1.should.throw(aclError);
     wrongAcl2.should.throw(aclError);
@@ -79,46 +79,46 @@ describe('lib/Listener', () => {
 
   it('should be able to add action', () => {
     function action() {}
-    var neuronListener = new Listener(robot, messageFormat);
+    const neuronListener = new Listener(robot, messageFormat);
     neuronListener.handler(action);
 
     neuronListener.handle.should.be.deep.equal(action);
   });
 
   it('should set rejected promise as default handle', () => {
-    var neuronListener = new Listener(robot, messageFormat);
+    const neuronListener = new Listener(robot, messageFormat);
 
     neuronListener.handle().should.be.rejectedWith('Unknown handle');
   });
 
   it('should validate action callback', () => {
-    var actionError = 'Action must be a function';
-    var neuronListener = new Listener(robot, messageFormat);
-    var wrongAction1 = () => neuronListener.handler('not a function');
-    var wrongAction2 = () => neuronListener.handler(new Error());
+    const actionError = 'Action must be a function';
+    const neuronListener = new Listener(robot, messageFormat);
+    const wrongAction1 = () => neuronListener.handler('not a function');
+    const wrongAction2 = () => neuronListener.handler(new Error());
 
     wrongAction1.should.throw(actionError);
     wrongAction2.should.throw(actionError);
   });
 
   it('should be able to ignore unmatched command', () => {
-    var messageFormat = 'not matched';
-    var req = {
+    const messageFormat = 'not matched';
+    const req = {
       message: {
         text: 'not match'
       }
     };
-    var res = {};
+    const res = {};
 
-    var neuronListener = new Listener(robot, messageFormat);
-    var response = neuronListener.respondTo(req, res);
+    const neuronListener = new Listener(robot, messageFormat);
+    const response = neuronListener.respondTo(req, res);
 
     response.match.should.be.equal(false);
   });
 
   it('should allow command without acl', () => {
-    var messageFormat = 'command without :acl([a-z]+)';
-    var req = {
+    const messageFormat = 'command without :acl([a-z]+)';
+    const req = {
       message: {
         text: 'command without acl'
       },
@@ -126,10 +126,10 @@ describe('lib/Listener', () => {
         name: 'goat'
       }
     };
-    var res = {};
+    const res = {};
 
-    var neuronListener = new Listener(robot, messageFormat);
-    var response = neuronListener.respondTo(req, res);
+    const neuronListener = new Listener(robot, messageFormat);
+    const response = neuronListener.respondTo(req, res);
 
     response.match.should.be.equal(true);
     response.allowed.should.be.equal(true);
@@ -137,8 +137,8 @@ describe('lib/Listener', () => {
   });
 
   it('should prevent command if not allowed by acl', () => {
-    var messageFormat = 'command without :acl([a-z]+)';
-    var req = {
+    const messageFormat = 'command without :acl([a-z]+)';
+    const req = {
       message: {
         text: 'command without acl'
       },
@@ -146,20 +146,20 @@ describe('lib/Listener', () => {
         name: 'goat'
       }
     };
-    var res = {};
-    var aclFn = sinon.stub().returns(false);
+    const res = {};
+    const aclFn = sinon.stub().returns(false);
 
-    var neuronListener = new Listener(robot, messageFormat);
+    const neuronListener = new Listener(robot, messageFormat);
     neuronListener.acl(aclFn);
 
-    var response = neuronListener.respondTo(req, res);
+    const response = neuronListener.respondTo(req, res);
     response.match.should.be.equal(true);
     response.allowed.should.be.equal(false);
   });
 
   it('should allow command if acl callback return true', () => {
-    var messageFormat = 'command without :acl([a-z]+)';
-    var req = {
+    const messageFormat = 'command without :acl([a-z]+)';
+    const req = {
       message: {
         text: 'command without acl'
       },
@@ -167,20 +167,20 @@ describe('lib/Listener', () => {
         name: 'goat'
       }
     };
-    var res = {};
-    var aclFn = () => true;
+    const res = {};
+    const aclFn = () => true;
 
-    var neuronListener = new Listener(robot, messageFormat);
+    const neuronListener = new Listener(robot, messageFormat);
     neuronListener.acl(aclFn);
 
-    var response = neuronListener.respondTo(req, res);
+    const response = neuronListener.respondTo(req, res);
     response.match.should.be.equal(true);
     response.allowed.should.be.equal(true);
   });
 
   it('should be send request and response to acl', () => {
-    var messageFormat = 'command without :something([a-z]+)';
-    var req = {
+    const messageFormat = 'command without :something([a-z]+)';
+    const req = {
       message: {
         text: 'command without acl'
       },
@@ -188,10 +188,10 @@ describe('lib/Listener', () => {
         name: 'goat'
       }
     };
-    var res = {};
-    var aclFn = sinon.stub().returns(true);
+    const res = {};
+    const aclFn = sinon.stub().returns(true);
 
-    var neuronListener = new Listener(robot, messageFormat);
+    const neuronListener = new Listener(robot, messageFormat);
     neuronListener.acl(aclFn);
 
     neuronListener.respondTo(req, res);
@@ -199,8 +199,8 @@ describe('lib/Listener', () => {
   });
 
   it('should handle action callback correctly', () => {
-    var messageFormat = 'command without :acl([a-z]+)';
-    var req = {
+    const messageFormat = 'command without :acl([a-z]+)';
+    const req = {
       message: {
         text: 'command without nope'
       },
@@ -208,19 +208,19 @@ describe('lib/Listener', () => {
         name: 'goat'
       }
     };
-    var res = {};
-    var responseMock = {status: 'ok'};
-    var action = sinon.stub().returns(Promise.resolve(responseMock));
+    const res = {};
+    const responseMock = { status: 'ok' };
+    const action = sinon.stub().returns(Promise.resolve(responseMock));
 
-    var neuronListener = new Listener(robot, messageFormat);
+    const neuronListener = new Listener(robot, messageFormat);
     neuronListener.handler(action);
 
     neuronListener.handle(req, res).should.become(responseMock);
   });
 
   it('should handle propagate error from action callback', () => {
-    var messageFormat = 'command without :acl([a-z]+)';
-    var req = {
+    const messageFormat = 'command without :acl([a-z]+)';
+    const req = {
       message: {
         text: 'command without acl'
       },
@@ -228,49 +228,49 @@ describe('lib/Listener', () => {
         name: 'goat'
       }
     };
-    var res = {};
-    var errorMessage = 'random action execution';
-    var errorMock = new Error(errorMessage);
-    var action = sinon.stub().returns(Promise.reject(errorMock));
-    var neuronListener = new Listener(robot, messageFormat);
+    const res = {};
+    const errorMessage = 'random action execution';
+    const errorMock = new Error(errorMessage);
+    const action = sinon.stub().returns(Promise.reject(errorMock));
+    const neuronListener = new Listener(robot, messageFormat);
 
     neuronListener.handler(action);
     neuronListener.handle(req, res).should.be.rejectedWith(errorMock);
   });
 
   it('should be able to get correct payload parameter', () => {
-    var messageFormat = 'get :animal([a-z]+) from :year([0-9]{4})';
-    var messageText = 'get kambing from 2010';
-    var expectedParam = {animal: 'kambing', year: '2010'};
-    var neuronListener = new Listener(robot, messageFormat);
+    const messageFormat = 'get :animal([a-z]+) from :year([0-9]{4})';
+    const messageText = 'get kambing from 2010';
+    const expectedParam = { animal: 'kambing', year: '2010' };
+    const neuronListener = new Listener(robot, messageFormat);
 
     neuronListener._getParam(messageText).should.be.deep.equal(expectedParam);
   });
 
   it('should be return empty object if payload is not found', () => {
-    var messageFormat = 'command without payload';
-    var messageText = 'command without payload';
-    var expectedParam = {};
-    var neuronListener = new Listener(robot, messageFormat);
+    const messageFormat = 'command without payload';
+    const messageText = 'command without payload';
+    const expectedParam = {};
+    const neuronListener = new Listener(robot, messageFormat);
 
     neuronListener._getParam(messageText).should.be.deep.equal(expectedParam);
   });
 
   it('should be able to get matches & param if messageFormat is regex', () => {
-    var messageFormat = /get ([a-z]+) from ([0-9]{4})/;
-    var messageText = 'get kambing from 2010';
-    var expectedMatches = ['kambing', '2010'];
-    var neuronListener = new Listener(robot, messageFormat);
+    const messageFormat = /get ([a-z]+) from ([0-9]{4})/;
+    const messageText = 'get kambing from 2010';
+    const expectedMatches = ['kambing', '2010'];
+    const neuronListener = new Listener(robot, messageFormat);
 
     neuronListener._getMatches(messageText).should.be.deep.equal(expectedMatches);
     neuronListener._getParam(messageText).should.be.deep.equal({});
   });
 
   it('should be able to return empty array if there is no more regex group', () => {
-    var messageFormat = /regex without other match/;
-    var messageText = 'regex without other match';
-    var expectedMatches = [];
-    var neuronListener = new Listener(robot, messageFormat);
+    const messageFormat = /regex without other match/;
+    const messageText = 'regex without other match';
+    const expectedMatches = [];
+    const neuronListener = new Listener(robot, messageFormat);
 
     neuronListener._getMatches(messageText).should.be.deep.equal(expectedMatches);
   });

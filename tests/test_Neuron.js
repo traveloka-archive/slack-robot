@@ -1,7 +1,5 @@
 /* eslint-env mocha */
-/* eslint no-unused-expressions:0 */
-/* eslint camelcase:0 */
-
+/* eslint no-unused-expressions: 0 */
 import chai from 'chai';
 import sinon from 'sinon';
 import Neuron from '../src/Neuron';
@@ -11,7 +9,7 @@ import Response from '../src/Response';
 
 chai.should();
 
-var robot = {
+const robot = {
   id: 'UR08OT',
   options: {
     ignoreMessageInGeneral: true,
@@ -21,7 +19,7 @@ var robot = {
 };
 
 describe('lib/Neuron', () => {
-  var requestMock = {
+  const requestMock = {
     message: {
       text: 'Yo dawg',
       isDirect: false,
@@ -36,12 +34,12 @@ describe('lib/Neuron', () => {
       name: 'such-channel'
     }
   };
-  var responseMock = {
+  const responseMock = {
     send: sinon.spy(),
     sendDM: sinon.spy(),
     reply: sinon.spy()
   };
-  var requestGenerator, responseGenerator;
+  let requestGenerator, responseGenerator;
 
   before(() => {
     requestGenerator = sinon.stub(Request.prototype, 'parse');
@@ -63,18 +61,18 @@ describe('lib/Neuron', () => {
   });
 
   it('should start with empty array of listener', () => {
-    var neuron = new Neuron(robot);
+    const neuron = new Neuron(robot);
     neuron.listeners.should.be.deep.equal([]);
   });
 
   it('should store robot instance', () => {
-    var neuron = new Neuron(robot);
+    const neuron = new Neuron(robot);
     neuron._robot.should.be.deep.equal(robot);
   });
 
   it('should be able to add one listener', () => {
-    var neuron = new Neuron(robot);
-    var neuronListener = neuron.listen('test');
+    const neuron = new Neuron(robot);
+    const neuronListener = neuron.listen('test');
 
     neuron.listeners.length.should.be.equal(1);
     neuron.listeners[0].should.be.equal(neuronListener);
@@ -82,7 +80,7 @@ describe('lib/Neuron', () => {
   });
 
   it('should be able to add multiple listener', () => {
-    var neuron = new Neuron(robot);
+    const neuron = new Neuron(robot);
     neuron.listen('test');
     neuron.listen('multiple');
     neuron.listen('listener');
@@ -91,16 +89,16 @@ describe('lib/Neuron', () => {
   });
 
   it('should ignore message with unknown channel / user', () => {
-    var unknownChannel = Object.assign({}, requestMock, {
+    const unknownChannel = Object.assign({}, requestMock, {
       channel: null,
       user: null
     });
-    var dispatchStub = sinon.stub(Neuron.prototype, '_dispatchHandler');
+    const dispatchStub = sinon.stub(Neuron.prototype, '_dispatchHandler');
 
     requestGenerator.returns(unknownChannel);
     responseGenerator.returns(responseMock);
 
-    var neuron = new Neuron(robot);
+    const neuron = new Neuron(robot);
     neuron.handle();
 
     dispatchStub.callCount.should.be.equal(0);
@@ -108,17 +106,17 @@ describe('lib/Neuron', () => {
   });
 
   it('should ignore message from self', () => {
-    var selfMessage = Object.assign({}, requestMock, {
+    const selfMessage = Object.assign({}, requestMock, {
       user: {
         id: robot.id
       }
     });
-    var dispatchStub = sinon.stub(Neuron.prototype, '_dispatchHandler');
+    const dispatchStub = sinon.stub(Neuron.prototype, '_dispatchHandler');
 
     requestGenerator.returns(selfMessage);
     responseGenerator.returns(responseMock);
 
-    var neuron = new Neuron(robot);
+    const neuron = new Neuron(robot);
     neuron.handle();
 
     dispatchStub.callCount.should.be.equal(0);
@@ -126,17 +124,17 @@ describe('lib/Neuron', () => {
   });
 
   it('should ignore message in general by default', () => {
-    var generalChannel = Object.assign({}, requestMock, {
+    const generalChannel = Object.assign({}, requestMock, {
       channel: {
         name: 'general'
       }
     });
-    var dispatchStub = sinon.stub(Neuron.prototype, '_dispatchHandler');
+    const dispatchStub = sinon.stub(Neuron.prototype, '_dispatchHandler');
 
     requestGenerator.returns(generalChannel);
     responseGenerator.returns(responseMock);
 
-    var neuron = new Neuron(robot);
+    const neuron = new Neuron(robot);
     neuron.handle();
 
     dispatchStub.callCount.should.be.equal(0);
@@ -144,22 +142,22 @@ describe('lib/Neuron', () => {
   });
 
   it('should not ignore message in general if such option is specified', () => {
-    var customRobot = Object.assign({}, robot, {
+    const customRobot = Object.assign({}, robot, {
       options: {
         ignoreMessageInGeneral: false
       }
     });
-    var generalChannel = Object.assign({}, requestMock, {
+    const generalChannel = Object.assign({}, requestMock, {
       channel: {
         name: 'general'
       }
     });
-    var dispatchStub = sinon.stub(Neuron.prototype, '_dispatchHandler');
+    const dispatchStub = sinon.stub(Neuron.prototype, '_dispatchHandler');
 
     requestGenerator.returns(generalChannel);
     responseGenerator.returns(responseMock);
 
-    var neuron = new Neuron(customRobot);
+    const neuron = new Neuron(customRobot);
     neuron.handle();
 
     dispatchStub.callCount.should.be.equal(1);
@@ -167,7 +165,7 @@ describe('lib/Neuron', () => {
   });
 
   it('should ignore message without mention by default', () => {
-    var randomNoMention = Object.assign({}, requestMock, {
+    const randomNoMention = Object.assign({}, requestMock, {
       message: {
         isDirect: false,
         withMention: false
@@ -176,12 +174,12 @@ describe('lib/Neuron', () => {
         name: 'random'
       }
     });
-    var dispatchStub = sinon.stub(Neuron.prototype, '_dispatchHandler');
+    const dispatchStub = sinon.stub(Neuron.prototype, '_dispatchHandler');
 
     requestGenerator.returns(randomNoMention);
     responseGenerator.returns(responseMock);
 
-    var neuron = new Neuron(robot);
+    const neuron = new Neuron(robot);
     neuron.handle();
 
     dispatchStub.callCount.should.be.equal(0);
@@ -189,17 +187,17 @@ describe('lib/Neuron', () => {
   });
 
   it('should not ignore message without mention if such option is specified', () => {
-    var customRobot = Object.assign({}, robot, {
+    const customRobot = Object.assign({}, robot, {
       options: {
         mentionToRespond: false
       }
     });
-    var dispatchStub = sinon.stub(Neuron.prototype, '_dispatchHandler');
+    const dispatchStub = sinon.stub(Neuron.prototype, '_dispatchHandler');
 
     requestGenerator.returns(requestMock);
     responseGenerator.returns(responseMock);
 
-    var neuron = new Neuron(customRobot);
+    const neuron = new Neuron(customRobot);
     neuron.handle();
 
     dispatchStub.callCount.should.be.equal(1);
@@ -207,17 +205,17 @@ describe('lib/Neuron', () => {
   });
 
   it('should always respond to DM by default', () => {
-    var directMessage = Object.assign({}, requestMock, {
+    const directMessage = Object.assign({}, requestMock, {
       message: {
         isDirect: true
       }
     });
-    var dispatchStub = sinon.stub(Neuron.prototype, '_dispatchHandler');
+    const dispatchStub = sinon.stub(Neuron.prototype, '_dispatchHandler');
 
     requestGenerator.returns(directMessage);
     responseGenerator.returns(responseMock);
 
-    var neuron = new Neuron(robot);
+    const neuron = new Neuron(robot);
     neuron.handle();
 
     dispatchStub.callCount.should.be.equal(1);
@@ -225,24 +223,24 @@ describe('lib/Neuron', () => {
   });
 
   it('should check for mention in DM if option is specified', () => {
-    var directMessage = Object.assign({}, requestMock, {
+    const directMessage = Object.assign({}, requestMock, {
       message: {
         withMention: false,
         isDirect: true
       }
     });
-    var customRobot = Object.assign({}, robot, {
+    const customRobot = Object.assign({}, robot, {
       options: {
         mentionToRespond: true,
         skipDMMention: false
       }
     });
-    var dispatchStub = sinon.stub(Neuron.prototype, '_dispatchHandler');
+    const dispatchStub = sinon.stub(Neuron.prototype, '_dispatchHandler');
 
     requestGenerator.returns(directMessage);
     responseGenerator.returns(responseMock);
 
-    var neuron = new Neuron(customRobot);
+    const neuron = new Neuron(customRobot);
     neuron.handle();
 
     dispatchStub.callCount.should.be.equal(0);
@@ -250,7 +248,7 @@ describe('lib/Neuron', () => {
   });
 
   it('should be able to show help for empty listener', () => {
-    var helpMessage = Object.assign({}, requestMock, {
+    const helpMessage = Object.assign({}, requestMock, {
       message: {
         text: 'help',
         isDirect: true,
@@ -260,14 +258,14 @@ describe('lib/Neuron', () => {
     requestGenerator.returns(helpMessage);
     responseGenerator.returns(responseMock);
 
-    var neuron = new Neuron(robot);
+    const neuron = new Neuron(robot);
     neuron.handle();
 
-    responseMock.send.should.be.calledWith({text: 'There is no command available yet'});
+    responseMock.send.should.be.calledWith({ text: 'There is no command available yet' });
   });
 
   it('should be able to show help for every listener', () => {
-    var helpMessage = Object.assign({}, requestMock, {
+    const helpMessage = Object.assign({}, requestMock, {
       message: {
         text: 'help',
         isDirect: true,
@@ -277,16 +275,16 @@ describe('lib/Neuron', () => {
     requestGenerator.returns(helpMessage);
     responseGenerator.returns(responseMock);
 
-    var neuron = new Neuron(robot);
+    const neuron = new Neuron(robot);
     neuron.listeners = [
-      {commandInfo: 'test', description: 'just testing'},
-      {commandInfo: 'testing :something in :environment', description: 'another test'}
+      { commandInfo: 'test', description: 'just testing' },
+      { commandInfo: 'testing :something in :environment', description: 'another test' }
     ];
 
     neuron.handle();
 
-    var helpText = 'just testing\nCommand: *test*\n\nanother test\nCommand: *testing :something in :environment*';
-    var expectedResponse = {
+    const helpText = 'just testing\nCommand: *test*\n\nanother test\nCommand: *testing :something in :environment*';
+    const expectedResponse = {
       attachments: [
         {
           fallback: 'Available commands:',
@@ -300,7 +298,7 @@ describe('lib/Neuron', () => {
   });
 
   it('should be able to skip help without description', () => {
-    var helpMessage = Object.assign({}, requestMock, {
+    const helpMessage = Object.assign({}, requestMock, {
       message: {
         text: 'help',
         isDirect: true,
@@ -310,16 +308,16 @@ describe('lib/Neuron', () => {
     requestGenerator.returns(helpMessage);
     responseGenerator.returns(responseMock);
 
-    var neuron = new Neuron(robot);
+    const neuron = new Neuron(robot);
     neuron.listeners = [
-      {commandInfo: 'test', description: 'just testing'},
-      {commandInfo: 'command without :description'}
+      { commandInfo: 'test', description: 'just testing' },
+      { commandInfo: 'command without :description' }
     ];
 
     neuron.handle();
 
-    var helpText = 'just testing\nCommand: *test*';
-    var expectedResponse = {
+    const helpText = 'just testing\nCommand: *test*';
+    const expectedResponse = {
       attachments: [
         {
           fallback: 'Available commands:',
@@ -333,7 +331,7 @@ describe('lib/Neuron', () => {
   });
 
   it('should be able to respond if no commands have a descrption', () => {
-    var helpMessage = Object.assign({}, requestMock, {
+    const helpMessage = Object.assign({}, requestMock, {
       message: {
         text: 'help',
         isDirect: true,
@@ -343,20 +341,20 @@ describe('lib/Neuron', () => {
     requestGenerator.returns(helpMessage);
     responseGenerator.returns(responseMock);
 
-    var neuron = new Neuron(robot);
+    const neuron = new Neuron(robot);
     neuron.listeners = [
-      {commandInfo: 'test'},
-      {commandInfo: 'another command without :description'}
+      { commandInfo: 'test' },
+      { commandInfo: 'another command without :description' }
     ];
 
     neuron.handle();
 
-    var helpText = 'Sorry, no description yet for any available commands';
-    responseMock.send.should.be.calledWith({text: helpText});
+    const helpText = 'Sorry, no description yet for any available commands';
+    responseMock.send.should.be.calledWith({ text: helpText });
   });
 
   it('should be able to respond using "show help"', () => {
-    var helpMessage = Object.assign({}, requestMock, {
+    const helpMessage = Object.assign({}, requestMock, {
       message: {
         text: 'show help',
         isDirect: true,
@@ -366,13 +364,13 @@ describe('lib/Neuron', () => {
     requestGenerator.returns(helpMessage);
     responseGenerator.returns(responseMock);
 
-    var neuron = new Neuron(robot);
+    const neuron = new Neuron(robot);
     neuron.handle();
     responseMock.send.should.be.calledOnce;
   });
 
   it('should be able to notify user when asking for help in channel/group', () => {
-    var helpMessage = Object.assign({}, requestMock, {
+    const helpMessage = Object.assign({}, requestMock, {
       message: {
         text: 'show help',
         isDirect: false,
@@ -382,14 +380,14 @@ describe('lib/Neuron', () => {
     requestGenerator.returns(helpMessage);
     responseGenerator.returns(responseMock);
 
-    var neuron = new Neuron(robot);
+    const neuron = new Neuron(robot);
     neuron.handle();
     responseMock.reply.should.be.calledWith('please check your direct message');
     responseMock.sendDM.should.be.calledOnce;
   });
 
   it('should be able to respond if there is no matching listener', () => {
-    var needListener = Object.assign({}, requestMock, {
+    const needListener = Object.assign({}, requestMock, {
       message: {
         text: 'yolo',
         isDirect: false,
@@ -399,18 +397,18 @@ describe('lib/Neuron', () => {
     requestGenerator.returns(needListener);
     responseGenerator.returns(responseMock);
 
-    var neuron = new Neuron(robot);
+    const neuron = new Neuron(robot);
     neuron.handle();
 
     responseMock.reply.should.be.calledWith('sorry I didn\'t understand your command');
   });
 
   it('should be able to run action handler if listener found', () => {
-    var listenerMock = {
-      respondTo: sinon.stub().returns({match: true, allowed: true}),
+    const listenerMock = {
+      respondTo: sinon.stub().returns({ match: true, allowed: true }),
       handle: sinon.stub().returns(Promise.resolve())
     };
-    var needListener = Object.assign({}, requestMock, {
+    const needListener = Object.assign({}, requestMock, {
       message: {
         text: 'yolo',
         isDirect: false,
@@ -420,7 +418,7 @@ describe('lib/Neuron', () => {
     requestGenerator.returns(needListener);
     responseGenerator.returns(responseMock);
 
-    var neuron = new Neuron(robot);
+    const neuron = new Neuron(robot);
     neuron.listeners = [listenerMock];
     neuron.handle();
 
@@ -428,11 +426,11 @@ describe('lib/Neuron', () => {
   });
 
   it('should not run action handler if not allowed by ACL', () => {
-    var listenerMock = {
-      respondTo: sinon.stub().returns({match: true, allowed: false}),
+    const listenerMock = {
+      respondTo: sinon.stub().returns({ match: true, allowed: false }),
       handle: sinon.stub().returns(Promise.resolve())
     };
-    var needListener = Object.assign({}, requestMock, {
+    const needListener = Object.assign({}, requestMock, {
       message: {
         text: 'yolo',
         isDirect: false,
@@ -442,7 +440,7 @@ describe('lib/Neuron', () => {
     requestGenerator.returns(needListener);
     responseGenerator.returns(responseMock);
 
-    var neuron = new Neuron(robot);
+    const neuron = new Neuron(robot);
     neuron.listeners = [listenerMock];
     neuron.handle();
 
@@ -450,13 +448,13 @@ describe('lib/Neuron', () => {
   });
 
   it('should be able to respond if there is an error when executing action', () => {
-    var errorMessage = 'Action error';
-    var errorMock = new Error(errorMessage);
-    var listenerMock = {
-      respondTo: sinon.stub().returns({match: true, allowed: true}),
+    const errorMessage = 'Action error';
+    const errorMock = new Error(errorMessage);
+    const listenerMock = {
+      respondTo: sinon.stub().returns({ match: true, allowed: true }),
       handle: sinon.stub().returns(Promise.reject(errorMock))
     };
-    var needListener = Object.assign({}, requestMock, {
+    const needListener = Object.assign({}, requestMock, {
       message: {
         text: 'yolo',
         isDirect: false,
@@ -466,7 +464,7 @@ describe('lib/Neuron', () => {
     requestGenerator.returns(needListener);
     responseGenerator.returns(responseMock);
 
-    var neuron = new Neuron(robot);
+    const neuron = new Neuron(robot);
     neuron.listeners = [listenerMock];
 
     // testing private method because async
