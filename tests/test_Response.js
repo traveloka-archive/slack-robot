@@ -154,6 +154,17 @@ describe('lib/Response', () => {
     });
   });
 
+  it('should be able to format mention', done => {
+    const res = new Response(slack);
+    const message = 'hula @admin and @with.dots';
+
+    res.parse(slackMessage);
+    res.sendText(message).then(() => {
+      channelInstanceMock.postMessage.should.be.calledWith({ as_user: true, text: `hula <@admin> and <@with.dots>` });
+      done();
+    });
+  });
+
   it('should be throw error if reply using object', () => {
     var res = new Response(slack);
     var errorMessage = 'You can only reply using simple string';

@@ -91,7 +91,7 @@ export default class Response {
   }
 
   _autoMention(text: string): Promise {
-    return text.replace(/([\@\#])([a-z]+)/g, (user, tag, target) => {
+    return text.replace(/([\@\#])([a-z\.]+)/g, (user, tag, target) => {
       if (['channel', 'group', 'everyone'].indexOf(target) !== -1 && tag === '@') {
         return `<!${target}>`;
       }
