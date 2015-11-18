@@ -82,7 +82,7 @@ class Neuron {
       return res.reply('sorry I didn\'t understand your command');
     } else if (listenerResponse.allowed) {
       return listener.handle(req, res).catch(err => {
-        return res.send(this.getExecutionErrorResponse_(err.message));
+        return res.send(this.getExecutionErrorResponse_(err.stack));
       });
     }
   }
