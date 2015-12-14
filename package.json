@@ -50,6 +50,7 @@
     "bluebird": "^2.9.34",
     "imstore": "^0.1.2",
     "log": "^1.4.0",
+    "object-assign": "^4.0.1",
     "slack-client": "^1.4.1"
   }
 }

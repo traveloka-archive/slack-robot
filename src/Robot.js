@@ -1,6 +1,7 @@
 /* @flow */
 import Log from 'log';
 import Store from 'imstore';
+import objectAssign from 'object-assign';
 import Slack from 'slack-client';
 import Neuron from './Neuron';
 
@@ -69,7 +70,7 @@ export default class Robot {
       autoMark: true
     };
 
-    return Object.assign(DEFAULT_OPTS, options);
+    return objectAssign(DEFAULT_OPTS, options);
   }
 
   _mergeRobotOptions(options: Object) : RobotOptions {
@@ -79,7 +80,7 @@ export default class Robot {
       skipDMMention: true
     };
 
-    return Object.assign(DEFAULT_OPTS, options);
+    return objectAssign(DEFAULT_OPTS, options);
   }
 
   _init() {
