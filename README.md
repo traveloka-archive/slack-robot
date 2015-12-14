@@ -6,10 +6,16 @@
 $ npm install slack-robot --save
 ```
 
-## Usage
+## Usage example
 ```js
 var SlackRobot = require('slack-robot');
 var robot = new SlackRobot(process.env.YOUR_SLACK_TOKEN);
+
+// will post 'world' text as bot when receiving 'hello' message
+// in channel, group, or direct message
+robot.listen('hello').handler(function (req, res) {
+  return res.sendText('world');
+});
 ```
 
 ## Advanced options
