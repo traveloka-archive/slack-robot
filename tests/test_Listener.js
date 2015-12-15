@@ -244,7 +244,7 @@ describe('lib/Listener', () => {
     const expectedParam = { animal: 'kambing', year: '2010' };
     const neuronListener = new Listener(robot, messageFormat);
 
-    neuronListener._getParam(messageText).should.be.deep.equal(expectedParam);
+    neuronListener._getParams(messageText).should.be.deep.equal(expectedParam);
   });
 
   it('should be return empty object if payload is not found', () => {
@@ -253,7 +253,7 @@ describe('lib/Listener', () => {
     const expectedParam = {};
     const neuronListener = new Listener(robot, messageFormat);
 
-    neuronListener._getParam(messageText).should.be.deep.equal(expectedParam);
+    neuronListener._getParams(messageText).should.be.deep.equal(expectedParam);
   });
 
   it('should be able to get matches & param if messageFormat is regex', () => {
@@ -263,7 +263,7 @@ describe('lib/Listener', () => {
     const neuronListener = new Listener(robot, messageFormat);
 
     neuronListener._getMatches(messageText).should.be.deep.equal(expectedMatches);
-    neuronListener._getParam(messageText).should.be.deep.equal({});
+    neuronListener._getParams(messageText).should.be.deep.equal({});
   });
 
   it('should be able to return empty array if there is no more regex group', () => {

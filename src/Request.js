@@ -32,13 +32,21 @@ class Request {
 
   channel: ?RequestChannel;
 
+  /* @deprecated in v3.x */
   param: Object;
+
+  params: Object;
 
   matches: Array<string>;
 
   constructor(slack: Slack, botMention: RegExp) {
     this._slack = slack;
     this._botMention = botMention;
+  }
+
+  get param() {
+    console.warn('Request.param is deprecated, use Request.params instead');
+    return this.params;
   }
 
   parse(slackMessage: Slack.Message): Request {

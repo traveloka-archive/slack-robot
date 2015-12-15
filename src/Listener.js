@@ -69,7 +69,7 @@ class Listener {
       this.robot_.logger.info(`Received ${req.message.text} from ${req.user.name}`);
     }
 
-    req.param = this._getParam(req.message.text);
+    req.params = this._getParams(req.message.text);
     req.matches = this._getMatches(req.message.text);
 
     if (typeof this.aclFn === 'function') {
@@ -97,7 +97,7 @@ class Listener {
     return new RegExp(messageExpression);
   }
 
-  _getParam(messageText: string): Object {
+  _getParams(messageText: string): Object {
     const payload = {};
 
     if (this.messageFormat instanceof RegExp) {
