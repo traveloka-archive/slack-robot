@@ -51,8 +51,20 @@ class Request {
 
   parse(slackMessage: Slack.Message): Request {
     this.message = this._createMessageObject(slackMessage, this._botMention);
-    this.user = this._createUserObject(slackMessage);
-    this.channel = this._createChannelObject(slackMessage);
+    this.user = this._createUserObject(slackMessage.user);
+    this.channel = this._createChannelObject(slackMessage.channel);
+    return this;
+  }
+
+  parseRawReaction(slackRawReactionMessage): Request {
+    this.message = {
+      text: '/reaction ${slackRawReactionMessage.name}',
+      isDirect: false,
+      withMention: false
+    };
+    this._createMessageObject(slackRawReactionMessage.name, this._botMention);
+    this.user = this._createUserObject(slackRawReactionMessage.user);
+    this.channel = this._createChannelObject(slackRawReactionMessage.item.channel);
     return this;
   }
 
@@ -110,9 +122,9 @@ class Request {
     };
   }
 
-  _createUserObject(slackMessage: Slack.Message): ?RequestUser {
+  _createUserObject(userId: String): ?RequestUser {
     const user = {};
-    const slackUserObject: SlackUserObject = this._slack.getUserByID(slackMessage.user);
+    const slackUserObject: SlackUserObject = this._slack.getUserByID(userId);
 
     if (!slackUserObject) {
       return null;
@@ -124,9 +136,9 @@ class Request {
     return user;
   }
 
-  _createChannelObject(slackMessage: Slack.Message): ?RequestChannel {
+  _createChannelObject(channelId: String): ?RequestChannel {
     const channel = {};
-    const slackChannelObject = this._slack.getChannelGroupOrDMByID(slackMessage.channel);
+    const slackChannelObject = this._slack.getChannelGroupOrDMByID(channelId);
 
     if (!slackChannelObject) {
       return null;

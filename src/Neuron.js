@@ -62,6 +62,28 @@ class Neuron {
     this._dispatchHandler(req, res);
   }
 
+  handleReaction(reactionMessage) {
+    let req = new Request(this._robot._slack, this._robot.mention);
+    let res = new Response(this._robot._slack);
+
+    req = req.parseRawReaction(reactionMessage);
+    res = res.parseRawReaction(reactionMessage);
+
+    if (!req.user || !req.channel) {
+      return;
+    }
+
+    if (req.user.id === this._robot.id) {
+      return;
+    }
+
+    if (this._robot.options.ignoreMessageInGeneral && req.channel.name === 'general') {
+      return;
+    }
+
+    this._dispatchHandler(req, res);
+  }
+
   _dispatchHandler(req: Request, res: Response) {
     if (req.message.text.match(/(show )?help/)) {
       return this._showHelp(req, res);

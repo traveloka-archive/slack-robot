@@ -19,6 +19,12 @@ export default class Response {
     return this;
   }
 
+  parseRawReaction(slackRawReactionMessage): Response {
+    this._user = this._slack.getUserByID(slackRawReactionMessage.user);
+    this._channel = this._slack.getChannelGroupOrDMByID(slackRawReactionMessage.item.channel);
+    return this;
+  }
+
   send(response : Slack.Response) {
     /* eslint-disable */
     response.as_user = true;
