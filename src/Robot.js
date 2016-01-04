@@ -95,6 +95,16 @@ export default class Robot {
       this._neuron.handle(message);
     });
 
+    this._slack.on('raw_message', raw_message => {
+      switch (raw_message.type) {
+        case 'reaction_added':
+          this._neuron.handleReaction(raw_message);
+          break;
+        default:
+          break;
+      }
+    });
+
     this._slack.on('error', err => {
       this.logger.error(err);
     });
