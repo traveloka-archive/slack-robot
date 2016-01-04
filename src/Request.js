@@ -58,7 +58,7 @@ class Request {
 
   parseRawReaction(slackRawReactionMessage): Request {
     this.message = {
-      text: '/reaction ${slackRawReactionMessage.name}',
+      text: `/reaction ${slackRawReactionMessage.name}`,
       isDirect: false,
       withMention: false
     };
