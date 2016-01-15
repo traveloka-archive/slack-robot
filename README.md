@@ -9,104 +9,49 @@ $ npm install slack-robot --save
 ## Usage example
 ```js
 var SlackRobot = require('slack-robot');
-var robot = new SlackRobot(process.env.YOUR_SLACK_TOKEN);
+var robot = new SlackRobot(process.env.SLACK_TOKEN);
 
 // will post 'world' text as bot when receiving 'hello' message
 // in channel, group, or direct message
-robot.listen('hello').handler(function (req, res) {
-  return res.sendText('world');
+robot.listen('hello', function (req, res) {
+  return res.text('world').send();
+});
+
+// ignore message from '#general' channel, even if it matches the listener
+robot.ignore('#general');
+
+// start listening
+robot.start();
+```
+
+## Parameterized message
+
+You can also listen to dynamic message by using parameterized message (usually called named-regex), by using `:name(REGEX)` syntaxes. All parameters will be available via `req.params`
+
+```js
+// send 'get sheep from 2010' to your bot
+robot.listen('get :animal([a-z\-]+) from :year([0-9]{4})', function (req, res) {
+  console.log(req.params)
+  // { animal: 'sheep', year: 2010 }
 });
 ```
 
-## Advanced options
+## Pure regex Listener
 
-- Modify slack options
-
-```js
-var SlackRobot = require('slack-robot');
-
-var slackOpts = {
-  token: process.env.YOUR_TOKEN // required
-  autoReconnect: false,         // defaults to true
-  autoMark: true                // defaults to true
-};
-var robot = new SlackRobot(slackOpts);
-```
-
-- Modify robot options
+Aside from named regex (which uses a partial regex match), you can use pure regex inside your listener. The difference is, instead of getting an object in `req.params`, you get Array of regex matches in `req.matches`
 
 ```js
-// below is default options, you can change it one by one
-var robotOpts = {
-  ignoreMessageInGeneral: true, // prevent bot to respond anything in #general channel
-  mentionToRespond: true,       // prevent bot to respond if not mentioned
-  skipDMMention: true,          // no need to mention bot in direct message (ignore mentionToRespond opt in DM)
-};
-
-var robot = new SlackRobot(process.env.YOUR_SLACK_TOKEN, robotOpts);
-```
-
-## Listener
-
-To add a listener simply call `robot.listen()` and it will return an instance of `Listener` with class signature below:
-
-```js
-class Listener {
-  // add description to your command (will be used to generate help message)
-  desc(description: string): Listener
-
-  // add acl to allow/deny access to your command
-  acl(aclCallback: Function(req: Request, res: Response)): Listener
-
-  // attach your handler to a command
-  handler(actionHandler: Function(req: Request, res: Response))
-}
-```
-
-### Simple message listener
-
-Pass a string as an argument to `robot.listen` to respond to specific message.
-
-```js
-robot.listen('hello').handler(function(req, res) {
-  // your handler here
-});
-```
-
-The `.handler` will be executed if robot received **'hello'** message from anywhere robot is subscribed to (channel, group, or DM)
-
-### Parameterized message
-
-You can also listen to message with specific parameter with named-regex
-
-```js
-// match 'get sheep from 2010'
-robot.listen('get :animal([a-z\-]+) from :year([0-9]{4})').handler(function(req, res) {
-  // you can get named-param inside Request object
-  console.log(req.param);
-  // {animal: 'sheep', year: '2010'}  
-  // note that req.param always returns Map<string, string>
-});
-```
-
-### Pure regex Listener
-
-Aside from named regex (which uses a partial regex match), you can use pure regex inside your listener. The difference is, instead of getting named-param inside `Request` object, you get Array of regex matches
-
-```js
-// match get sheep from 2010
-robot.listen(/get ([a-z]+) from ([0-9]{4})/).handler(function(req, res) {
+// send 'get sheep from 2010' to your bot
+robot.listen(/get ([a-z]+) from ([0-9]{4})/, function (req, res) {
   // you don't have anything in named-param
-  console.log(req.param)
+  console.log(req.params)
   // {}
 
-  // instead you can use req.matches
+  // you use req.matches instead
   console.log(req.matches);
   // ['sheep', '2010']
 })
 ```
-
-Another difference is when generating help text, you will get *ugly* regex inside your command information, like `/get ([a-z]+) from ([0-9]{4})/` instead of properly named command information `get :animal from :year`.
 
 ## Request & Response Lifecycle
 
@@ -115,125 +60,217 @@ In `slack-robot`, receiving and sending message is handled via `Request` and `Re
 ```
 type Request = {
   message: {
-    text: string,
-    isDirect: boolean,
-    withMention: boolean
+    type: string
+    value: {}
   },
-  user: {
+  from: {
     id: string,
     name: string
   },
-  channel: {
+  to: {
     id: string,
-    name: string
-  }  
+    ?name: string // missing if direct message
+  }
+  params: {},
+  matches: []
 }
 ```
 
-To respond a command, you use `Response` object with class signature below:
+For example when you `@anonymous` send the bot `@hola` message `get sheep from 2010 @hola` in `#general` channel
 
 ```js
-class Response {
-  // respond message to user in currently active source (channel/group/DM)
-  send(res: Slack.Response): Promise
-
-  // syntactic sugar to send text only response (uses .sendDM internally)
-  sendText(text: string): Promise
-
-  // send message via user's direct message (even if he/she write it on channel/group)
-  sendDM(res: Slack.Response): Promise
-
-  // syntactic sugar to send text only response (uses .sendDM internally)
-  sendTextDM(text: string): Promise
-
-  // send specific response to specific target (channel/group/DM)
-  sendTo(target: string, res: Slack.Response): Promise
-
-  // syntactic sugar to send text only response (uses .sendTo internally)
-  sendTextTo(target: string, text: string): Promise
-
-  // append "@user:" in front of your text (uses .sendText internally)
-  reply(text: string): Promise
-}
-```
-
-`slack-robot` internally uses `channel.postMessage` API, so most of `Response` API accept `Slack.Response` object. See https://api.slack.com/docs/formatting for more detail. One thing to note is that `slack-robot` will automatically run formatting for you so you don't need to manually format your message to use mention.
-
-### Example
-
-```js
-// Listen to "hello", and send "@user: hi!"
-robot.listen('hello').handler(function(req, res) {
-  return res.reply('hi! Meet my maker @admin');
+robot.listen('get :animal([a-z\-]+) from :year([0-9]{4})', function (req, res) {
+  console.log(req);
+  // message: {
+  //   type: 'text'
+  //   value: {
+  //     text: 'get sheep from 2010'
+  //     mentioned: true
+  //   }
+  // },
+  // from: {
+  //   id: 'your_random_id',
+  //   name: 'anonymous'
+  // },
+  // to: {
+  //   id: 'random_channel_id',
+  //   name: 'general'
+  // },
+  // params: {
+  //   animal: 'sheep',
+  //   year: '2010',
+  // },
+  // matches: []
 });
+```
 
-// listen to "release status" and send attachment (see slack docs for more information)
-robot.listen('release status').handler(function(req, res) {
-  return res.send({
-    attachments: [
-      {
-        title: 'Attachments is cool',
-        text: 'colors and autoformatting!',
-        color: '#fa3720'
+To respond a message, use `res` object. You can respond multiple times as you want
+
+```js
+robot.listen('yo', function (req, res) {
+  /**
+   * Send text
+   *
+   * @param {string} text
+   */
+  res.text('what\'s up?');
+
+  /**
+   * Send attachment
+   *
+   * @param {string} text in attachment
+   * @param {Array<Object>|Object}
+   * @see https://api.slack.com/docs/attachments
+   */
+  res.attachment(text, attachment);
+
+  /**
+   * Send file
+   *
+   * @param {string} filename
+   * @param {string|ReadStream} content
+   * @see https://nodejs.org/api/fs.html
+   */
+  res.upload('snippet.txt', fs.createReadStream('snippet.txt'));
+
+  /**
+   * Add reaction to the message
+   *
+   * @param {string} reaction emoji
+   */
+  res.reaction(':+1:');
+
+  /**
+   * Always end your handler by returning res.send
+   */
+  return res.send();
+});
+```
+
+Until you call `res.send()`, your message will not be sent. By calling
+`res.send()`, it will queue all your response and send them in series. To change this behavior,
+change `concurrency` property from robot:
+
+```js
+// send 3 response in parallel (this will affect all listener)
+// keep in mind that enabling concurrency means the order of the
+// message is not guaranteed
+robot.set('concurrency', 3);
+```
+
+## Custom response target
+
+To respond in another channel/im, simply pass the last argument to `.text()`,
+`.attachment()` or `.upload()`, with channel name `#general`, group name `private-group`,
+or username `@anon`, or use an array of string to send multiple target:
+
+```js
+robot.listen('yo', function (req, res) {
+  res.attachment('here', attachment, '#general');
+  res.upload('document.doc', file, '@anon');
+  res.text('done!', ['#general', '@anon']);
+
+  // end your request
+  return res.send();
+});
+```
+
+**NOTE: You cannnot use custom response target when adding reaction**
+
+## Async response
+
+Sometimes you want to do some asynchronous task before sending back response, you can
+use `res.async()` which accept a callback that receive `send` function as argument.
+To end your async task call `send()` without any argument. If your async task failed, call
+`send()` with an error object:
+
+```js
+robot.listen('deploy', function (req, res) {
+  res.text('executing scripts..');
+
+  return res.async(function (done) {
+    childProcess.exec('~/scripts/deploy --to production', function (err, stdout, stderr) {
+      if (err) {
+        // return to stop code for reaching res.text
+        return done(err);
       }
-    ]
+
+      // use res.text like usual
+      res.text('done, printing stdout:');
+      res.text(stdout);      
+      done();
+    });
+  // call .send() to send all previous response declared in async task
+  }).send();
+})
+```
+
+**NOTE: Calling `res.send()` after `res.async()` doesn't send all the response,
+because `res.send()` is synchronous. Make sure you call `res.async().send()`
+to send the response**
+
+If you already use Promise, you can return your Promise chain instead of using
+`res.async`
+
+```js
+// es2015 code style
+robot.listen('deploy', (req, res) => {
+  return deployer().then(output => {
+    res.text('done, printing output:');
+    res.text(output);
+    return res.send();
   })
-})
-```
-
-## ACL
-
-`slack-robot` comes with simple access control list (ACL) management. It accept a callback that returns a `Boolean`. Action handler will be executed only if this callback return `true`. ACL callback has exact same signature with Action handler, so you can use `Request` and `Response` object.
-
-```js
-robot.listen('push to production').acl(function(req, res) {
-  if (req.channel.name !== 'release-channel') {
-    res.reply(`please send this command in #release-channel`)
-    return false;
-  }
-
-  return true;
-})
-// will only be executed if req.chanel.name === 'release-channel'
-.handler(releaseToProduction);
-```
-
-**Note:** Returning `false` in ACL callback doesn't automatically make robot respond anything to user, it just ignore the command. Always use `Response` object to respond before returning `false` to notify the user that his command will be ignored because of ACL.
-
-## Brain
-
-`slack-robot` also have simple immutable in-memory key-value store using [imstore](https://github.com/pveyes/imstore). To access it simply call imstore API via `robot.brain`.
-
-Example:
-```js
-robot.listen('release').handler(function(req, res) {
-  var isReleasing = robot.brain.get('isReleasing');
-
-  if (isReleasing) {
-    return res.reply('release still in progress');
-  }
-
-  robot.brain.set('isReleasing', true);
-  // run release command ...
 });
 ```
 
-## Automatic help generator
+## External trigger
 
-As explained above, `slack-robot` comes with built-in help generator based on information you specify when attaching listener. Help message will be sent to you via direct message by the bot (even if you ask for them in channel/group). **Make sure you also write description for your command (if not, it will be hidden from help message)**
+You can also send message without having to listen to any message. This is particularly
+useful when combined with another service that run asynchronously (for example error
+reporting). Use `robot.to()` to get the response object
+you usually use when responding message
 
 ```js
-robot.listen('push :branch([a-Z/\-]+) to :env(production|staging)')
-.desc('Deploy specific branch to production or staging servers')
-.handler(deploy);
+var ws = require('websocket');
+
+ws.on('message', function (msg) {
+  // robot.to() is async by nature because we need to make sure
+  // the bot is connected before you able to send the message
+  // hence the use of the callback to get the response object
+  robot.to('@anon', function (res) {
+    res.text('Hi anon, you got a message');
+    res.text(msg);
+    return res.send();
+  });
+});
 ```
 
-To see help message, simply say `help` or `show help`. Help message then will be sent to you via DM
+## Handling the unexpected
 
-Example:
-> Deploy specific branch to production or staging servers
+slack-robot will emit event if something happened. Below is the list of events
+you can listen to:
 
-> Command: **push :branch to :env**
+- `message_no_sender`, when you receive a message without user information
+- `own_message`, when you receive a message from bot itself
+- `ignored_channel`, when you receive a message in channel that you ignore via `robot.ignore`
+- `no_listener_match`, when you receive a message without matching listener
+- `response_failed`, when failed sending a **single** response
+- `error`, general error, usually if your listener callback has uncaught exception
+
+To listen specific event, use `robot.on()`
+
+```js
+robot.on('no_listener_match', function (res) {
+  return res.text('sorry, I don\'t understand your command').send();
+});
+
+robot.on('error', function (err) {
+  // print to stderr, or sent to error reporting service
+  console.error(err);
+});
+```
+
+**NOTE: .reaction() and .async() cannot be used here**
 
 ## License
 
