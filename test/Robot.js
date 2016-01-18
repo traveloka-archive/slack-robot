@@ -103,6 +103,17 @@ describe('Robot', () => {
     robot.state.should.be.equal(defaultState);
   });
 
+  it('should only initialized plugin once', () => {
+    const robot = new Robot('token');
+    const plugin = sinon.spy();
+
+    robot.use(plugin);
+    robot.use(plugin);
+    robot.use(plugin);
+    robot.use(plugin);
+    plugin.should.be.calledOne;
+  });
+
   it('should throw on invalid plugin', () => {
     const robot = new Robot('token');
     const invalidPlugin = function () {

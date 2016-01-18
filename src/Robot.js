@@ -37,6 +37,11 @@ export default class Robot extends EventEmitter {
     };
 
     /**
+     *
+     */
+    this._plugins = [];
+
+    /**
      * Ignore all listener in this channel
      *
      * @private
@@ -120,7 +125,11 @@ export default class Robot extends EventEmitter {
       throw new Error('Invalid plugin type');
     }
 
-    plugin(this);
+    /* eslint no-implicit-coercion: 0 */
+    if (!~this._plugins.indexOf(plugin)) {
+      plugin(this);
+      this._plugins.push(plugin);
+    }
   }
 
   /**
