@@ -1,5 +1,6 @@
 export function stripEmoji(emoji) {
-  return emoji.replace(/:?([^:]+):?/, '$1');
+  const noTagEmoji = emoji.replace(/:?([^:]+):?/, '$1');
+  return noTagEmoji.replace(/:+skin-tone.*/, '');
 }
 
 export function getFileExtension(filename) {

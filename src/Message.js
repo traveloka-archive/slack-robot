@@ -1,4 +1,5 @@
 import { EVENTS } from 'slack-client';
+import { stripEmoji } from './util';
 
 const MESSAGE_TYPE = EVENTS.API.EVENTS;
 
@@ -14,27 +15,22 @@ export default class Message {
     const type = messageObject.type;
     const from = dataStore.getUserById(messageObject.user);
 
-    let channelId;
-    let to = {};
+    let to;
     let value = {};
     let timestamp;
 
     switch (messageObject.type) {
       case MESSAGE_TYPE.MESSAGE:
-        channelId = messageObject.channel;
+        to = dataStore.getChannelGroupOrDMById(messageObject.channel);
         value = parseTextMessage(dataStore, bot, messageObject.text);
         timestamp = messageObject.ts;
         break;
       case MESSAGE_TYPE.REACTION_ADDED:
-        channelId = messageObject.item.channel;
-        value = { emoji: messageObject.reaction };
+        to = dataStore.getChannelGroupOrDMById(messageObject.item.channel);
         timestamp = messageObject.item.ts;
+        value = { emoji: stripEmoji(messageObject.reaction) };
         break;
       default:
-    }
-
-    if (channelId) {
-      to = dataStore.getChannelGroupOrDMById(channelId);
     }
 
     this.from = from;

@@ -5,7 +5,7 @@ import { describe, it } from 'mocha';
 import Message from '../src/Message';
 
 chai.use(sinonChai);
-chai.should();
+const should = chai.should();
 
 const bot = {
   name: 'slackbot'
@@ -77,7 +77,7 @@ describe('Message', () => {
     const msg = {
       type: 'reaction_added',
       user: userIdMock,
-      reaction: 'grinning',
+      reaction: ':grinning:',
       item: {
         channel: channelIdMock,
         ts: timestampMock
@@ -91,12 +91,30 @@ describe('Message', () => {
     message.value.should.be.deep.equal({ emoji: 'grinning' });
   });
 
+  it('should parse reaction message with skin tone', () => {
+    const msg = {
+      type: 'reaction_added',
+      user: userIdMock,
+      reaction: ':+1::skin-tone-4:',
+      item: {
+        channel: channelIdMock,
+        ts: timestampMock
+      }
+    };
+    const message = new Message(bot, dataStore, msg);
+    message.type.should.be.equal('reaction_added');
+    message.from.should.be.deep.equal(userMock);
+    message.to.should.be.deep.equal(channelMock);
+    message.timestamp.should.be.equal(timestampMock);
+    message.value.should.be.deep.equal({ emoji: '+1' });
+  });
+
   it('should parse message with no channel', () => {
     const msg = {
       type: 'message'
     };
     const message = new Message(bot, dataStore, msg);
-    message.to.should.be.deep.equal({});
+    should.not.exist(message.to);
   });
 
   it('should remove username formatting', () => {
