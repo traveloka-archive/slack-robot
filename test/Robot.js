@@ -86,6 +86,16 @@ describe('Robot', () => {
     robot._ignoredChannels.should.be.deep.equal(['#random', '#general']);
   });
 
+  it.only('should ignore adding same ignored channels multiple times', () => {
+    const robot = new Robot('token');
+    robot.ignore('#random');
+    robot.ignore('#random');
+    robot.ignore('#general');
+    robot.ignore('#random');
+    robot.ignore('#random');
+    robot._ignoredChannels.should.be.deep.equal(['#random', '#general']);
+  });
+
   it('should be able to add ignored channels using var args', () => {
     const robot = new Robot('token');
     robot.ignore('#general', '#random');

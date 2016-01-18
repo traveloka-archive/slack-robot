@@ -119,7 +119,11 @@ export default class Robot extends EventEmitter {
    * @param {...string} channels
    */
   ignore(...channels) {
-    this._ignoredChannels = this._ignoredChannels.concat(channels);
+    channels.forEach(channel => {
+      if (!Boolean(~this._ignoredChannels.indexOf(channel))) {
+        this._ignoredChannels.push(channel);
+      }
+    });
   }
 
   /**
