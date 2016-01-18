@@ -281,7 +281,8 @@ describe('Robot', () => {
     const reactionDataMock = {
       type: 'reaction_added',
       reaction: 'grinning',
-      items: {
+      item: {
+        type: 'message',
         channel: 'C341912',
         ts: '12524123.000234'
       }
@@ -292,6 +293,140 @@ describe('Robot', () => {
     // start to listen
     robot.start();
     messageHandlerStub.should.be.calledWithExactly(reactionDataMock);
+
+    // cleanup
+    wsStartStub.restore();
+    wsMessageStub.restore();
+    messageHandlerStub.restore();
+  });
+
+  it('should queue reaction_added event in file', () => {
+    // use stub to prevent actual call to websocket
+    const robot = new Robot('token');
+    const wsStartStub = sinon.stub(RtmClient.prototype, 'start');
+    const wsMessageStub = sinon.stub(RtmClient.prototype, 'on');
+    const messageHandlerStub = sinon.stub(Robot.prototype, '_onMessage');
+    const reactionDataMock = {
+      type: 'reaction_added',
+      reaction: ':joy:',
+      user: 'D12523',
+      item: {
+        type: 'file',
+        file: 'F341912'
+      }
+    };
+
+    const msgQueueMock = {
+      id: 'F341912',
+      user: 'D12523',
+      type: 'file',
+      reaction: ':joy:',
+      originalType: 'reaction_added'
+    };
+
+    wsMessageStub.withArgs('reaction_added').callsArgWith(1, reactionDataMock);
+
+    // start to listen
+    robot.start();
+    robot._messageQueue[0].should.be.deep.equal(msgQueueMock);
+
+    // cleanup
+    wsStartStub.restore();
+    wsMessageStub.restore();
+    messageHandlerStub.restore();
+  });
+
+  it('should queue reaction_added event in file comment', () => {
+    // use stub to prevent actual call to websocket
+    const robot = new Robot('token');
+    const wsStartStub = sinon.stub(RtmClient.prototype, 'start');
+    const wsMessageStub = sinon.stub(RtmClient.prototype, 'on');
+    const messageHandlerStub = sinon.stub(Robot.prototype, '_onMessage');
+    const reactionDataMock = {
+      type: 'reaction_added',
+      reaction: ':joy:',
+      user: 'C0G9QF9GZ',
+      item: {
+        type: 'file_comment',
+        file_comment: 'Fc0HS2KBEZ',
+        file: 'F0HS27V1Z'
+      }
+    };
+
+    const msgQueueMock = {
+      id: 'F0HS27V1Z',
+      user: 'C0G9QF9GZ',
+      type: 'file_comment',
+      reaction: ':joy:',
+      originalType: 'reaction_added'
+    };
+
+    wsMessageStub.withArgs('reaction_added').callsArgWith(1, reactionDataMock);
+
+    // start to listen
+    robot.start();
+    robot._messageQueue[0].should.be.deep.equal(msgQueueMock);
+
+    // cleanup
+    wsStartStub.restore();
+    wsMessageStub.restore();
+    messageHandlerStub.restore();
+  });
+
+  it('should flush message queue if found matching message_changed event', () => {
+    // use stub to prevent actual call to websocket
+    const robot = new Robot('token');
+    const wsStartStub = sinon.stub(RtmClient.prototype, 'start');
+    const wsMessageStub = sinon.stub(RtmClient.prototype, 'on');
+    const messageHandlerStub = sinon.stub(Robot.prototype, '_onMessage');
+    const reactionDataMock = {
+      type: 'reaction_added',
+      reaction: ':joy:',
+      user: 'U12523',
+      item: {
+        type: 'file',
+        file: 'F341912'
+      }
+    };
+    const messageChangedMock = {
+      type: 'message',
+      subtype: 'message_changed',
+      channel: 'C247221',
+      message: {
+        ts: '123908013.00390',
+        file: {
+          id: 'F341912'
+        }
+      },
+      eventTs: '123908013.00392',
+      ts: '123908013.00412'
+    };
+    const reactionParsedMessageMock = {
+      type: 'reaction_added',
+      reaction: ':joy:',
+      user: 'U12523',
+      item: {
+        type: 'message',
+        channel: 'C247221',
+        ts: '123908013.00390'
+      },
+      eventTs: '123908013.00392',
+      ts: '123908013.00412'
+    };
+
+    wsMessageStub.withArgs('reaction_added').onFirstCall().callsArgWith(1, reactionDataMock);
+    robot.start();
+
+    // Because the event listener is stubbed, callsArgWith will only be called
+    // after the stub is executed (.on is called via robot.start).
+    // By running robot.start() after reaction_added event, we're sure that
+    // no more callback stub are stored, so we can add another callback stub
+    // and run robot.start() again to process this new callback
+    // This is done to make sure message event is received after reaction_added
+    wsMessageStub.withArgs('message').callsArgWith(1, messageChangedMock);
+    robot.start();
+
+    messageHandlerStub.should.be.calledWithExactly(reactionParsedMessageMock);
 
     // cleanup
     wsStartStub.restore();
@@ -313,7 +448,7 @@ describe('Robot', () => {
     robot._onMessage(messagePayload);
   });
 
-  it('should emit own_message, if message comes from itself', done => {
+  it('should emit message_no_channel, if no user specified in message payload', done => {
     const robot = new Robot('token');
     robot.bot = { id: 'U834975', name: 'mockbot' };
     robot._rtm.dataStore = {
@@ -321,10 +456,42 @@ describe('Robot', () => {
     };
     const messagePayload = {
       type: 'message',
-      user: robot.bot.id
+      user: 'U123213'
+    };
+
+    const userMock = {
+      id: 'U123213',
+      name: 'hacker'
+    };
+
+    robot.on('message_no_channel', () => {
+      done();
+    });
+
+    robot._rtm.dataStore.getUserById.withArgs(messagePayload.user).returns(userMock);
+
+    robot._onMessage(messagePayload);
+  });
+
+  it('should emit own_message, if message comes from itself', done => {
+    const robot = new Robot('token');
+    robot.bot = { id: 'U834975', name: 'mockbot' };
+    robot._rtm.dataStore = {
+      getUserById: sinon.stub(),
+      getChannelGroupOrDMById: sinon.stub()
+    };
+    const messagePayload = {
+      type: 'message',
+      user: robot.bot.id,
+      channel: 'C341912'
+    };
+    const channelMock = {
+      id: 'C341912',
+      name: 'general'
     };
 
     robot._rtm.dataStore.getUserById.withArgs(messagePayload.user).returns(robot.bot);
+    robot._rtm.dataStore.getChannelGroupOrDMById.withArgs(messagePayload.channel).returns(channelMock);
 
     robot.on('own_message', () => {
       done();

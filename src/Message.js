@@ -16,21 +16,26 @@ export default class Message {
     const from = dataStore.getUserById(messageObject.user);
 
     let to;
+    let channelId;
     let value = {};
     let timestamp;
 
     switch (messageObject.type) {
       case MESSAGE_TYPE.MESSAGE:
-        to = dataStore.getChannelGroupOrDMById(messageObject.channel);
+        channelId = messageObject.channel;
         value = parseTextMessage(dataStore, bot, messageObject.text);
         timestamp = messageObject.ts;
         break;
       case MESSAGE_TYPE.REACTION_ADDED:
-        to = dataStore.getChannelGroupOrDMById(messageObject.item.channel);
+        channelId = messageObject.item.channel;
         timestamp = messageObject.item.ts;
         value = { emoji: stripEmoji(messageObject.reaction) };
         break;
       default:
+    }
+
+    if (channelId) {
+      to = dataStore.getChannelGroupOrDMById(channelId);
     }
 
     this.from = from;
