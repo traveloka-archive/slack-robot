@@ -257,13 +257,11 @@ you can listen to:
 - `response_failed`, when failed sending a **single** response
 - `error`, general error, usually if your listener callback has uncaught exception
 
-To listen specific event, use `robot.on()`
+To listen specific event, use `robot.on(message, callback)`. Most event will receive
+message object, except `response_failed` and `error` event which receive error object
+instead, and `message_no_sender` which receive original message object from slack API
 
 ```js
-robot.on('no_listener_match', function (res) {
-  return res.text('sorry, I don\'t understand your command').send();
-});
-
 robot.on('error', function (err) {
   // print to stderr, or sent to error reporting service
   console.error(err);
