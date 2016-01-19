@@ -1,6 +1,23 @@
 # slack-robot [![Build Status](https://travis-ci.org/traveloka/slack-robot.svg)](https://travis-ci.org/traveloka/slack-robot) [![Coverage Status](https://coveralls.io/repos/traveloka/slack-robot/badge.svg?branch=master&service=github)](https://coveralls.io/github/traveloka/slack-robot?branch=master) [![Package Version](http://img.shields.io/npm/v/slack-robot.svg)](https://www.npmjs.com/package/slack-robot)
 > Simple robot for your slack integration
 
+`slack-robot` initially built to respond message from user with an action, then replying
+with a response. While hubot will do the job, it's too generic (no slack specific response like reaction, snippet, attachment, or listening to slack specific event). Using hubot also mean learning hubot specific command, using the right adapter, using the right slack-client, and patching them with slack specific event
+
+While modularity is good, we're not sure about using multiple module with exponentially
+larger bug possibility (and also broader learning material). Because we are using it in critical application, we need to make sure that the API surface is as little as possible, with near perfect test coverage. With that in mind, we built slack-robot by wrapping "official" slack-client into much easier to consume request-response handling library.
+
+## Features
+
+- Simple request response handler
+- Normalize Slack API idiosyncrasy, for example:
+  - listening to reaction_added event using Slack RTM will trigger event handler regardless the message and channel (even the channel the bot not joined)
+  - uploading binary file is not possible (yet)
+- Send response (or payload) without having to listen to event (external trigger)
+- Access Control List (ACL) for each listener (only respond to message when fulfill specific criteria)
+- Extendable via plugin (for example [storing state](https://github.com/pveyes/slack-robot-state))
+- [Complete control](https://github.com/traveloka/slack-robot#handling-the-unexpected) over what happen to your request and response
+
 ## Installation
 ```sh
 $ npm install slack-robot --save
