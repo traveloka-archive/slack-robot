@@ -31,7 +31,40 @@ describe('Listeners', () => {
 
   it('should return null for invalid id', () => {
     const l = new Listeners();
+    l.add('message', 'value1', () => {});
+    l.add('message', 'value2', () => {});
+    l.add('message', 'value3', () => {});
     should.not.exist(l.get('random'));
+  });
+
+  it('should return all listeners if no id specified', () => {
+    const l = new Listeners();
+    l.add('message', 'value', () => {});
+    l.add('reaction_added', '+1', () => {});
+    const listeners = l.get();
+    listeners.length.should.be.equal(2);
+    listeners[0].type.should.be.equal('message');
+    listeners[0].value.should.be.equal('value');
+    listeners[1].type.should.be.equal('reaction_added');
+    listeners[1].value.should.be.equal('\\+1');
+  });
+
+  it('should be able to remove listener by id', () => {
+    const l = new Listeners();
+    l.add('message', 'value', () => {});
+    const id = l.add('reaction_added', '+1', () => {}).id;
+    l.remove(id).should.be.equal(true);
+    l.get().length.should.be.equal(1);
+    should.not.exist(l.get(id));
+  });
+
+  it('should not remove listener for invalid id', () => {
+    const l = new Listeners();
+    l.add('message', 'value', () => {});
+    const listener = l.add('reaction_added', '+1', () => {});
+    l.remove('random').should.be.equal(false);
+    l.get().length.should.be.equal(2);
+    l.get(listener.id).should.be.deep.equal(listener);
   });
 
   it('should find text message', () => {

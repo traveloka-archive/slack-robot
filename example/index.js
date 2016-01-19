@@ -9,6 +9,9 @@ var Robot = require('..');
 var token = process.env.SLACK_TOKEN;
 var robot = new Robot(token);
 
+// enable help command
+robot.set('help_generator', true);
+
 // ignore all message in this channel
 robot.ignore('#bot-playground');
 

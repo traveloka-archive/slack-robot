@@ -246,6 +246,7 @@ ws.on('message', function (msg) {
 ```
 
 **NOTE: .reaction() and .async() cannot be used here**
+
 ## Handling the unexpected
 
 slack-robot will emit event if something happened. Below is the list of events
@@ -270,6 +271,11 @@ robot.on('error', function (err) {
 });
 ```
 
+## Help command generator
+
+When you have many listener, you sometimes forget all your listeners. You can see it
+by enabling help generator which will sent you all your listeners. Enable it using `robot.set('help_generator', true)` (it's disabled by default). It will add another listener that will listen to all text message containing "help". So if you send message
+to the bot "show help" or "help", it will send you the command list.
 
 ## License
 

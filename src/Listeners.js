@@ -1,5 +1,4 @@
 import Listener from './Listener';
-import { find } from 'lodash';
 
 export default class Listeners {
   constructor() {
@@ -11,7 +10,7 @@ export default class Listeners {
    * @param {string} type
    * @param {string|RegExp} value
    * @param {function (req, res)} callback
-   * @return {Object} listener
+   * @return {Listener} listener
    */
   add(type, value, callback) {
     const entry = new Listener(type, value, callback);
@@ -21,17 +20,44 @@ export default class Listeners {
 
   /**
    * @public
-   * @param {string} id
-   * @return {?Object} listener
+   * @param {?string} id
+   * @return {Array.<Listener>|?Listener} listener
    */
   get(id) {
-    return find(this._entries, 'id', id);
+    if (!id) {
+      return this._entries;
+    }
+
+    for (let i = 0; i < this._entries.length; i++) {
+      if (this._entries[i].id === id) {
+        return this._entries[i];
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   *
+   * @public
+   * @param {string} id
+   * @return {boolean}
+   */
+  remove(id) {
+    for (let i = 0; i < this._entries.length; i++) {
+      if (this._entries[i].id === id) {
+        this._entries.splice(i, 1);
+        return true;
+      }
+    }
+
+    return false;
   }
 
   /**
    * @public
    * @param {Message} message
-   * @return {?Object} listener
+   * @return {?Listener} listener
    */
   find(message) {
     let value = '';

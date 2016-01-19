@@ -7,6 +7,7 @@ import Listeners from './Listeners';
 import Message from './Message';
 import Request from './Request';
 import Response from './Response';
+import plugins from './plugins';
 import acls from './acls';
 
 const logger = new Log('info');
@@ -38,6 +39,7 @@ export default class Robot extends EventEmitter {
     /**
      * Bot properties
      *
+     * @var {Object}
      * @private
      */
     this._vars = {
@@ -45,12 +47,18 @@ export default class Robot extends EventEmitter {
     };
 
     /**
+     * List of message that is not processed yet by listener, mainly because
+     * missing information. Currently only stored reaction_added event message
      *
+     * @var {Array.<MessageQueue}
+     * @private
      */
     this._messageQueue = [];
 
     /**
      *
+     * @var {Array.<function(robot)>}
+     * @private
      */
     this._plugins = [];
 
@@ -123,18 +131,24 @@ export default class Robot extends EventEmitter {
   }
 
   /**
+   * Add channel(s) to ignored list, so it won't be processed
+   * no matter what the listener is
+   *
    * @public
    * @param {...string} channels
    */
   ignore(...channels) {
     channels.forEach(channel => {
-      if (!Boolean(~this._ignoredChannels.indexOf(channel))) {
+      if (this._ignoredChannels.indexOf(channel) === -1) {
         this._ignoredChannels.push(channel);
       }
     });
   }
 
   /**
+   * Inject plugin
+   *
+   * @public
    * @param {function} plugin
    */
   use(plugin) {
@@ -142,8 +156,7 @@ export default class Robot extends EventEmitter {
       throw new Error('Invalid plugin type');
     }
 
-    /* eslint no-implicit-coercion: 0 */
-    if (!~this._plugins.indexOf(plugin)) {
+    if (this._plugins.indexOf(plugin) === -1) {
       plugin(this);
       this._plugins.push(plugin);
     }
@@ -158,7 +171,12 @@ export default class Robot extends EventEmitter {
    */
   set(property, value) {
     if (value !== null && value !== undefined) {
-      this._vars[property] = value;
+      // special property
+      if (property === 'help_generator') {
+        this.use(plugins.helpGenerator({ enable: Boolean(value) }));
+      } else {
+        this._vars[property] = value;
+      }
     }
   }
 
@@ -166,6 +184,7 @@ export default class Robot extends EventEmitter {
    * Send robot response by without listener
    *
    * Caveat: .reaction. .async is disabled
+   * @public
    * @param {string} target
    */
   to(target, callback) {
@@ -190,6 +209,37 @@ export default class Robot extends EventEmitter {
     });
 
     callback(res);
+  }
+
+  /**
+   * Get list of listeners
+   *
+   * @public
+   * @return {Array.<Listener>}
+   */
+  getAllListeners() {
+    return this._listeners.get();
+  }
+
+  /**
+   * Get listener by id
+   *
+   * @public
+   * @param {string} listenerId
+   * @return {?Listener}
+   */
+  getListener(listenerId) {
+    return this._listeners.get(listenerId);
+  }
+
+  /**
+   * Remove listener by id
+   *
+   * @public
+   * @param {string} listenerId
+   */
+  removeListener(listenerId) {
+    return this._listeners.remove(listenerId);
   }
 
   /**
@@ -382,6 +432,8 @@ export default class Robot extends EventEmitter {
     for (let i = 0; i < this._messageQueue.length; i++) {
       const entry = this._messageQueue[i];
 
+      // Else statement doesn't do anything anyway so it's not
+      // worth covering
       /* istanbul ignore else */
       if (this._isReactionAddEvent(entry, message)) {
         const msg = {
@@ -403,14 +455,22 @@ export default class Robot extends EventEmitter {
     }
   }
 
-  _isReactionAddEvent(entry, message) {
+  /**
+   * Check if new message is a complementary for reaction_added event
+   *
+   * @private
+   * @param {MessageQueue} queue
+   * @param {SlackMessage} message
+   * @return {boolean}
+   */
+  _isReactionAddEvent(queue, message) {
     /* istanbul ignore else */
-    if (message.message.file && message.message.file.id === entry.id) {
+    if (message.message.file && message.message.file.id === queue.id) {
       return true;
     }
 
     // apparently istanbul doesn't recognize this else pattern
-    // so we should add another Ignore
+    // so we should add another ignore
     /* istanbul ignore next */
     return false;
   }

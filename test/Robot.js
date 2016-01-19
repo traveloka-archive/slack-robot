@@ -8,6 +8,7 @@ import Listeners from '../src/Listeners';
 import Response from '../src/Response';
 import Log from 'log';
 import { RtmClient, WebClient } from 'slack-client';
+import plugins from '../src/plugins';
 
 chai.use(sinonChai);
 const should = chai.should();
@@ -214,6 +215,48 @@ describe('Robot', () => {
       invalidAsync.should.throw('Cannot use method .async() in robot.to()');
       done();
     });
+  });
+
+  it('should call listeners.get when getAllListeners called', () => {
+    const robot = new Robot('token');
+    const getSpy = sinon.spy(Listeners.prototype, 'get');
+
+    robot.getAllListeners();
+    getSpy.should.be.calledOnce;
+    getSpy.restore();
+  });
+
+  it('should call listeners.get when getListener called', () => {
+    const robot = new Robot('token');
+    const getSpy = sinon.spy(Listeners.prototype, 'get');
+
+    robot.getListener('wewe');
+    getSpy.should.be.calledWithExactly('wewe');
+    getSpy.restore();
+  });
+
+  it('should call listeners.remove when removeListener called', () => {
+    const robot = new Robot('token');
+    const removeSpy = sinon.spy(Listeners.prototype, 'remove');
+
+    robot.removeListener('wewe');
+    removeSpy.should.be.calledWithExactly('wewe');
+    removeSpy.restore();
+  });
+
+  it('should use help-generator-plugin when enabled', () => {
+    const robot = new Robot('token');
+    const robotPluginSpy = sinon.spy(Robot.prototype, 'use');
+    const generatorSpy = sinon.stub(plugins, 'helpGenerator');
+    const pluginSpy = sinon.spy();
+
+    generatorSpy.withArgs({ enable: true }).returns(pluginSpy);
+
+    robot.set('help_generator', true);
+    generatorSpy.should.be.calledWithExactly({ enable: true });
+    robotPluginSpy.should.be.calledWith(pluginSpy);
+    robotPluginSpy.restore();
+    generatorSpy.restore();
   });
 
   it('should only connect to websocket when started', () => {

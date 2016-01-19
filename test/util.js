@@ -7,7 +7,7 @@ import {
 
 chai.should();
 
-describe('stripEmoji', () => {
+describe('util.stripEmoji', () => {
   it('should remove : before emoji', () => {
     stripEmoji(':grinning').should.be.equal('grinning');
     stripEmoji(':sweat_smile').should.be.equal('sweat_smile');
@@ -33,7 +33,7 @@ describe('stripEmoji', () => {
   });
 });
 
-describe('getFileExtension', () => {
+describe('util.getFileExtension', () => {
   it('should get any extension', () => {
     getFileExtension('package.json').should.be.equal('json');
     getFileExtension('movie.3gp').should.be.equal('3gp');
