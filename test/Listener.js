@@ -24,6 +24,23 @@ describe('Listener', () => {
     listener.description.should.be.equal(description);
   });
 
+  it('should be able to store acl', () => {
+    const listener = new Listener('message', 'hi', callback);
+    const description = 'Some description message';
+    listener.desc(description);
+
+    listener.description.should.be.equal(description);
+  });
+
+  it('should be able to store multiple acl', () => {
+    const acl1 = function acl1() {};
+    const acl2 = function acl2() {};
+    const listener = new Listener('message', 'hi', callback)
+    .acl(acl1, acl2);
+
+    listener.acls.should.be.deep.equal([acl1, acl2]);
+  });
+
   it('should store correct regex value', () => {
     const regex = /hi/ig;
     const listener = new Listener('message', regex, callback);

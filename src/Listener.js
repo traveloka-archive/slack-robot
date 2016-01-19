@@ -10,10 +10,17 @@ export default class Listener {
     this.matcher = this._createMatcher(this.value);
     this.callback = callback;
     this.description = '';
+    this.acls = [];
   }
 
   desc(description) {
     this.description = description;
+    return this;
+  }
+
+  acl(...acls) {
+    this.acls = this.acls.concat(acls);
+    return this;
   }
 
   _parseValue(type, value) {

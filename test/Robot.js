@@ -577,7 +577,56 @@ describe('Robot', () => {
     robot._onMessage(messagePayload);
   });
 
-  it('should emit message_handled if done successfully', done => {
+  it('should run all acls', done => {
+    const robot = new Robot('token');
+    robot.bot = { id: 'U834975', name: 'mockbot' };
+    robot._rtm.dataStore = {
+      getUserById: sinon.stub(),
+      getChannelGroupOrDMById: sinon.stub()
+    };
+    const messagePayload = {
+      type: 'message',
+      text: 'hello dear',
+      user: 'U413552',
+      channel: 'C724030'
+    };
+    const userMock = {
+      id: messagePayload.user,
+      name: 'anonymouse'
+    };
+    const channelMock = {
+      id: messagePayload.channel,
+      name: 'general'
+    };
+    const aclStub1 = sinon.stub();
+    const aclStub2 = sinon.stub();
+    const listenerMock = {
+      type: 'message',
+      value: 'hello ([a-z]+)',
+      matcher: /^hello ([a-z]+)$/,
+      acls: [aclStub1, aclStub2],
+      callback: sinon.spy()
+    };
+
+    const listenerStub = sinon.stub(Listeners.prototype, 'find').returns(listenerMock);
+
+    robot._rtm.dataStore.getUserById.withArgs(messagePayload.user).returns(userMock);
+    robot._rtm.dataStore.getChannelGroupOrDMById.withArgs(messagePayload.channel).returns(channelMock);
+    aclStub1.callsArg(2);
+    aclStub2.callsArg(2);
+
+    robot.on('request_handled', () => {
+      aclStub1.should.be.calledOnce;
+      aclStub2.should.be.calledOnce;
+      listenerMock.callback.should.be.calledOnce;
+      listenerStub.restore();
+      done();
+    });
+
+    robot._onMessage(messagePayload);
+  });
+
+  it('should emit request_handled if done successfully', done => {
     const robot = new Robot('token');
     robot.bot = { id: 'U834975', name: 'mockbot' };
     robot._rtm.dataStore = {
@@ -602,6 +651,7 @@ describe('Robot', () => {
       type: 'message',
       value: 'hello ([a-z]+)',
       matcher: /^hello ([a-z]+)$/,
+      acls: [],
       callback: sinon.spy()
     };
 
@@ -610,7 +660,7 @@ describe('Robot', () => {
     robot._rtm.dataStore.getUserById.withArgs(messagePayload.user).returns(userMock);
     robot._rtm.dataStore.getChannelGroupOrDMById.withArgs(messagePayload.channel).returns(channelMock);
 
-    robot.on('message_handled', () => {
+    robot.on('request_handled', () => {
       listenerMock.callback.should.be.calledOnce;
       listenerStub.restore();
       done();
@@ -644,6 +694,7 @@ describe('Robot', () => {
       type: 'message',
       value: 'hello ([a-z]+)',
       matcher: /^hello ([a-z]+)$/,
+      acls: [],
       callback: (req, res) => {
         return res.text('failed').send();
       }
@@ -691,6 +742,7 @@ describe('Robot', () => {
       type: 'message',
       value: 'hello ([a-z]+)',
       matcher: /^hello ([a-z]+)$/,
+      acls: [],
       callback: (req, res) => {
         throw errorMock;
       }

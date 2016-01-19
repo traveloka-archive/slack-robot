@@ -7,6 +7,7 @@ import Listeners from './Listeners';
 import Message from './Message';
 import Request from './Request';
 import Response from './Response';
+import acls from './acls';
 
 const logger = new Log('info');
 const RTM_EVENTS = EVENTS.CLIENT.RTM;
@@ -26,6 +27,13 @@ export default class Robot extends EventEmitter {
      * @public
      */
     this.bot = null;
+
+    /**
+     * All built-in acl
+     *
+     * @public
+     */
+    this.acls = acls;
 
     /**
      * Bot properties
@@ -261,6 +269,7 @@ export default class Robot extends EventEmitter {
     }
 
     const listener = this._listeners.find(message);
+
     if (!listener) {
       this.emit('no_listener_match', message);
       return;
@@ -278,13 +287,35 @@ export default class Robot extends EventEmitter {
     const response = new Response(this._api, this._rtm.dataStore, request, concurrency);
     response.on('task_error', err => this.emit('response_failed', err));
 
+    this._checkListenerAcl(listener.acls, request, response, () => {
+      this._handleRequest(request, response, listener.callback);
+    });
+  }
+
+  _checkListenerAcl(acls, request, response, callback) {
+    const acl = acls[0];
+
+    if (!acl) {
+      return callback();
+    }
+
+    acl(request, response, () => {
+      acls.splice(0, 1);
+      this._checkListenerAcl(acls, request, response, callback);
+    });
+  }
+
+  /**
+   * Handle request
+   */
+  _handleRequest(request, response, callback) {
     // wrap in "new Promise()"" instead of "Promise.resolve()"
     // because using Promise.resolve won't catch any uncaught
     // exception in listener.callback
     new Promise(resolve => {
-      return resolve(listener.callback(request, response));
+      return resolve(callback(request, response));
     })
-    .then(() => this.emit('message_handled', message))
+    .then(() => this.emit('request_handled', request))
     .catch(err => this.emit('error', err));
   }
 

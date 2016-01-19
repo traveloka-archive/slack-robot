@@ -245,6 +245,7 @@ ws.on('message', function (msg) {
 });
 ```
 
+**NOTE: .reaction() and .async() cannot be used here**
 ## Handling the unexpected
 
 slack-robot will emit event if something happened. Below is the list of events
@@ -255,11 +256,12 @@ you can listen to:
 - `ignored_channel`, when you receive a message in channel that you ignore via `robot.ignore`
 - `no_listener_match`, when you receive a message without matching listener
 - `response_failed`, when failed sending a **single** response
+- `request_handled`, when a request has been handled
 - `error`, general error, usually if your listener callback has uncaught exception
 
 To listen specific event, use `robot.on(message, callback)`. Most event will receive
 message object, except `response_failed` and `error` event which receive error object
-instead, and `message_no_sender` which receive original message object from slack API
+instead, `request_handled` which receive request object, and `message_no_sender` which receive original message object from slack API
 
 ```js
 robot.on('error', function (err) {
@@ -268,7 +270,6 @@ robot.on('error', function (err) {
 });
 ```
 
-**NOTE: .reaction() and .async() cannot be used here**
 
 ## License
 
