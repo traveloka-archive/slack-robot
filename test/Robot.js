@@ -341,11 +341,59 @@ describe('Robot', () => {
       }
     };
 
+    robot.bot = { id: 'bot-id' };
+    robot._api.reactions.get = sinon.stub().withArgs({
+      channel: 'C341912',
+      timestamp: '12524123.000234'
+    }).callsArgWith(1, null, {
+      ok: true,
+      message: {
+        user: 'bot-id'
+      }
+    });
     wsMessageStub.withArgs('reaction_added').callsArgWith(1, reactionDataMock);
 
     // start to listen
     robot.start();
     messageHandlerStub.should.be.calledWithExactly(reactionDataMock);
+
+    // cleanup
+    wsStartStub.restore();
+    wsMessageStub.restore();
+    messageHandlerStub.restore();
+  });
+
+  it('should only listen reaction_added event in bot own message', () => {
+    // use stub to prevent actual call to websocket
+    const robot = new Robot('token');
+    const wsStartStub = sinon.stub(RtmClient.prototype, 'start');
+    const wsMessageStub = sinon.stub(RtmClient.prototype, 'on');
+    const messageHandlerStub = sinon.stub(Robot.prototype, '_onMessage');
+    const reactionDataMock = {
+      type: 'reaction_added',
+      reaction: 'grinning',
+      item: {
+        type: 'message',
+        channel: 'C341912',
+        ts: '12524123.000234'
+      }
+    };
+
+    robot.bot = { id: 'bot-id' };
+    robot._api.reactions.get = sinon.stub().withArgs({
+      channel: 'C341912',
+      timestamp: '12524123.000234'
+    }).callsArgWith(1, null, {
+      ok: true,
+      message: {
+        user: 'not-from-bot'
+      }
+    });
+    wsMessageStub.withArgs('reaction_added').callsArgWith(1, reactionDataMock);
+
+    // start to listen
+    robot.start();
+    messageHandlerStub.should.notCalled;
 
     // cleanup
     wsStartStub.restore();
@@ -446,6 +494,7 @@ describe('Robot', () => {
       subtype: 'message_changed',
       channel: 'C247221',
       message: {
+        user: 'bot-id',
         ts: '123908013.00390',
         file: {
           id: 'F341912'
@@ -467,6 +516,7 @@ describe('Robot', () => {
       ts: '123908013.00412'
     };
 
+    robot.bot = { id: 'bot-id' };
     wsMessageStub.withArgs('reaction_added').onFirstCall().callsArgWith(1, reactionDataMock);
     robot.start();
 

@@ -279,7 +279,23 @@ export default class Robot extends EventEmitter {
         return this._queueMessage(message);
       }
 
-      this._onMessage(message);
+      /**
+       * Receiving reaction_added event does not mean the bot message was
+       * given a reaction, it just mean that someone, somewhere (not even in bot channel)
+       * give a reaction. This is madness!
+       * We need to validate the message first whether it is written by ourself
+       * (bot), or someone else. If it's not bot's own message, skip that shit
+       */
+      this._api.reactions.get({
+        channel: message.item.channel,
+        timestamp: message.item.ts
+      }, (err, res) => {
+        if (err || !res.ok || res.message.user !== this.bot.id) {
+          return;
+        }
+
+        this._onMessage(message);
+      });
     });
 
     this._rtm.start();
@@ -465,7 +481,7 @@ export default class Robot extends EventEmitter {
    */
   _isReactionAddEvent(queue, message) {
     /* istanbul ignore else */
-    if (message.message.file && message.message.file.id === queue.id) {
+    if (message.message.user === this.bot.id && message.message.file && message.message.file.id === queue.id) {
       return true;
     }
 
