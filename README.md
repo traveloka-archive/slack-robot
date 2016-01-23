@@ -86,6 +86,7 @@ type Request = {
   },
   to: {
     id: string,
+    type: string, (channel, group, or dm)
     ?name: string // missing if direct message
   }
   params: {},
@@ -111,7 +112,8 @@ robot.listen('get :animal([a-z\-]+) from :year([0-9]{4})', function (req, res) {
   // },
   // to: {
   //   id: 'random_channel_id',
-  //   name: 'general'
+  //   name: 'general',
+  //   type: 'channel'
   // },
   // params: {
   //   animal: 'sheep',

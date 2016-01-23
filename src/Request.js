@@ -10,6 +10,23 @@ export default class Request {
     let params = {};
     let matches = [];
 
+    if (msg.to) {
+      switch (to.id.charAt(0).toLowerCase()) {
+        case 'c':
+          to.type = 'channel';
+          break;
+        case 'g':
+          to.type = 'group';
+          break;
+        case 'd':
+          to.type = 'dm';
+          break;
+        /* istanbul ignore next: */
+        default:
+          to.type = 'channel';
+      }
+    }
+
     if (message.type === 'message') {
       params = getParams(message.value.text, listener.value, listener.matcher);
 

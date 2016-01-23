@@ -18,13 +18,19 @@ describe('Request', () => {
       },
       to: {
         id: 'C21234',
-        name: 'private'
+        name: 'public-channel'
       },
       timestamp: '1324873.03284'
     };
     const listener = {
       value: 'something',
       matcher: /^something$/
+    };
+
+    const channel = {
+      id: 'C21234',
+      name: 'public-channel',
+      type: 'channel'
     };
 
     const messageReq = {
@@ -39,7 +45,7 @@ describe('Request', () => {
     const req = new Request(msg, listener);
     req.message.should.be.deep.equal(messageReq);
     req.from.should.be.deep.equal(msg.from);
-    req.to.should.be.deep.equal(msg.to);
+    req.to.should.be.deep.equal(channel);
     req.params.should.be.deep.equal({});
     req.matches.should.be.deep.equal([]);
   });
@@ -56,8 +62,8 @@ describe('Request', () => {
         name: 'anonymous'
       },
       to: {
-        id: 'C21234',
-        name: 'private'
+        id: 'G21234',
+        name: 'private-group'
       },
       timestamp: '1324873.03284'
     };
@@ -65,10 +71,46 @@ describe('Request', () => {
       value: 'something',
       matcher: /^something$/
     };
+    const channel = {
+      id: 'G21234',
+      name: 'private-group',
+      type: 'group'
+    };
 
     const req = new Request(msg, listener);
     req.user.should.be.deep.equal(msg.from);
-    req.channel.should.be.deep.equal(msg.to);
+    req.channel.should.be.deep.equal(channel);
+  });
+
+  it('should have add channel type for dm message', () => {
+    const msg = {
+      type: 'message',
+      value: {
+        text: 'something',
+        mentioned: false
+      },
+      from: {
+        id: 'D12321',
+        name: 'anonymous'
+      },
+      to: {
+        id: 'D21234',
+        name: 'slackbot'
+      },
+      timestamp: '1324873.03284'
+    };
+    const listener = {
+      value: 'something',
+      matcher: /^something$/
+    };
+    const channel = {
+      id: 'D21234',
+      name: 'slackbot',
+      type: 'dm'
+    };
+
+    const req = new Request(msg, listener);
+    req.channel.should.be.deep.equal(channel);
   });
 
   it('should get named-params', () => {
