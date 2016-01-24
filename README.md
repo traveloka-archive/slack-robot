@@ -1,4 +1,4 @@
-# slack-robot [![Build Status](https://travis-ci.org/traveloka/slack-robot.svg)](https://travis-ci.org/traveloka/slack-robot) [![Coverage Status](https://coveralls.io/repos/traveloka/slack-robot/badge.svg?branch=master&service=github)](https://coveralls.io/github/traveloka/slack-robot?branch=master) [![Package Version](http://img.shields.io/npm/v/slack-robot.svg)](https://www.npmjs.com/package/slack-robot)
+# slack-robot [![Build Status](https://travis-ci.org/traveloka/slack-robot.svg)](https://travis-ci.org/traveloka/slack-robot) [![codecov.io](https://codecov.io/github/traveloka/slack-robot/coverage.svg?branch=master)](https://codecov.io/github/traveloka/slack-robot?branch=master) [![Package Version](http://img.shields.io/npm/v/slack-robot.svg)](https://www.npmjs.com/package/slack-robot)
 > Simple robot for your slack integration
 
 `slack-robot` initially built to respond message from user with an action, then replying
@@ -16,7 +16,7 @@ larger bug possibility (and also broader learning material). Because we are usin
 - Send response (or payload) without having to listen to event (external trigger)
 - Access Control List (ACL) for each listener (only respond to message when fulfill specific criteria)
 - Extensible via plug-ins (for example [storing state](https://github.com/pveyes/slack-robot-state))
-- [Complete control](https://github.com/traveloka/slack-robot#handling-the-unexpected) over what happen to your request and response
+- [Complete control](#handling-the-unexpected) over what happen to your request and response
 
 ## Installation
 ```sh
