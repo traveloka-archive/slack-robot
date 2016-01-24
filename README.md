@@ -15,7 +15,7 @@ larger bug possibility (and also broader learning material). Because we are usin
   - uploading binary file is not possible (yet)
 - Send response (or payload) without having to listen to event (external trigger)
 - Access Control List (ACL) for each listener (only respond to message when fulfill specific criteria)
-- Extendable via plugin (for example [storing state](https://github.com/pveyes/slack-robot-state))
+- Extensible via plug-ins (for example [storing state](https://github.com/pveyes/slack-robot-state))
 - [Complete control](https://github.com/traveloka/slack-robot#handling-the-unexpected) over what happen to your request and response
 
 ## Installation
@@ -43,7 +43,7 @@ robot.start();
 
 ## Parameterized message
 
-You can also listen to dynamic message by using parameterized message (usually called named-regex), by using `:name(REGEX)` syntaxes. All parameters will be available via `req.params`
+You can also listen to dynamic message by using parameterized message (usually called named-regexp), by using `:name(REGEXP)` syntaxes. All parameters will be available via `req.params`
 
 ```js
 // send 'get sheep from 2010' to your bot
@@ -53,9 +53,9 @@ robot.listen('get :animal([a-z\-]+) from :year([0-9]{4})', function (req, res) {
 });
 ```
 
-## Pure regex Listener
+## Pure regular expression (regexp) listener
 
-Aside from named regex (which uses a partial regex match), you can use pure regex inside your listener. The difference is, instead of getting an object in `req.params`, you get Array of regex matches in `req.matches`
+Aside from named regexp (which uses a partial regexp match), you can use pure regexp inside your listener. The difference is, instead of getting an object in `req.params`, you get Array of regexp matches in `req.matches`
 
 ```js
 // send 'get sheep from 2010' to your bot
@@ -70,9 +70,9 @@ robot.listen(/get ([a-z]+) from ([0-9]{4})/, function (req, res) {
 })
 ```
 
-## Request & Response Lifecycle
+## Request & response life cycle
 
-In `slack-robot`, receiving and sending message is handled via `Request` and `Response` object inside handler (or ACL). Everytime your bot receive a chat, you get `Request` object with typedef below
+In `slack-robot`, receiving and sending message is handled via `Request` and `Response` object. Every time your bot receive a chat, you get `Request` object with typedef below
 
 ```
 type Request = {
@@ -181,7 +181,7 @@ robot.set('concurrency', 3);
 
 To respond in another channel/im, simply pass the last argument to `.text()`,
 `.attachment()` or `.upload()`, with channel name `#general`, group name `private-group`,
-or username `@anon`, or use an array of string to send multiple target:
+or user name `@anon`, or use an array of string to send multiple target:
 
 ```js
 robot.listen('yo', function (req, res) {
@@ -194,14 +194,14 @@ robot.listen('yo', function (req, res) {
 });
 ```
 
-**NOTE: You cannnot use custom response target when adding reaction**
+**NOTE: You cannot use custom response target when adding reaction**
 
-## Async response
+## Asynchronous response
 
 Sometimes you want to do some asynchronous task before sending back response, you can
 use `res.async()` which accept a callback that receive `send` function as argument.
-To end your async task call `send()` without any argument. If your async task failed, call
-`send()` with an error object:
+To end your asynchronous task call `send()` without any argument. If your asynchronous
+task failed, call `send()` with an error object:
 
 ```js
 robot.listen('deploy', function (req, res) {
@@ -219,7 +219,7 @@ robot.listen('deploy', function (req, res) {
       res.text(stdout);      
       done();
     });
-  // call .send() to send all previous response declared in async task
+  // call .send() to send all previous response declared in asynchronous task
   }).send();
 })
 ```
@@ -253,7 +253,7 @@ you usually use when responding message
 var ws = require('websocket');
 
 ws.on('message', function (msg) {
-  // robot.to() is async by nature because we need to make sure
+  // robot.to() is asynchronous by nature because we need to make sure
   // the bot is connected before you able to send the message
   // hence the use of the callback to get the response object
   robot.to('@anon', function (res) {
