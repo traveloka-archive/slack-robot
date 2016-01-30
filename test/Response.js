@@ -86,6 +86,44 @@ describe('Response', () => {
     });
   });
 
+  it('should allow array of attachment in res.attachment()', () => {
+    const res = new Response(token, dataStoreMock, requestMock);
+    res.attachment('hello', [
+      { a: 'b' }, { c: 'd' }, { e: 'f' }
+    ]);
+
+    res._queue.length().should.be.equal(1);
+    res._queue.tasks[0].data.should.deep.equal({
+      target: requestMock.to.id,
+      type: 'attachments',
+      value: {
+        text: 'hello',
+        attachments: [
+          { a: 'b' },
+          { c: 'd' },
+          { e: 'f' }
+        ]
+      }
+    });
+  });
+
+  it('should allow sending attachment without text', () => {
+    const res = new Response(token, dataStoreMock, requestMock);
+    res.attachment({ key: 'value' });
+
+    res._queue.length().should.be.equal(1);
+    res._queue.tasks[0].data.should.deep.equal({
+      target: requestMock.to.id,
+      type: 'attachments',
+      value: {
+        text: undefined,
+        attachments: [
+          { key: 'value' }
+        ]
+      }
+    });
+  });
+
   it('should queue upload task without running it', () => {
     const res = new Response(token, dataStoreMock, requestMock);
     res.upload('a.txt', 'aaa');
@@ -193,27 +231,6 @@ describe('Response', () => {
       value: {
         filename: 'snippet.txt',
         content: 'snippet'
-      }
-    });
-  });
-
-  it('allow array of attachment in res.attachment()', () => {
-    const res = new Response(token, dataStoreMock, requestMock);
-    res.attachment('hello', [
-      { a: 'b' }, { c: 'd' }, { e: 'f' }
-    ]);
-
-    res._queue.length().should.be.equal(1);
-    res._queue.tasks[0].data.should.deep.equal({
-      target: requestMock.to.id,
-      type: 'attachments',
-      value: {
-        text: 'hello',
-        attachments: [
-          { a: 'b' },
-          { c: 'd' },
-          { e: 'f' }
-        ]
       }
     });
   });

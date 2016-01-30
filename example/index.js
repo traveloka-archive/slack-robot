@@ -45,6 +45,23 @@ robot.listen('attachment', function (req, res) {
   return res.attachment('envelope', attachment).send();
 });
 
+robot.listen('attach', function (req, res) {
+  const attachment = {
+    fallback: 'attachment received',
+    title: 'No-text attachment',
+    text: 'You got an attachment without text',
+    color: 'good',
+    fields: [
+      {
+        title: 'Priority',
+        value: 'High',
+        short: false
+      }
+    ]
+  };
+  return res.attachment(attachment).send();
+});
+
 // respond using reaction
 robot.listen('reaction', function (req, res) {
   return res.reaction(':joy:').send();

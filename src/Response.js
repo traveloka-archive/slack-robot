@@ -97,19 +97,33 @@ export default class Response extends EventEmitter {
    * @param {Array.<Object>|Object} attachment
    * @param {=Array.<string>|string} optTargets
    * @see https://api.slack.com/docs/attachments
+   *
+   * Also support sending attachment without text with two params
+   * @param {Array.<Object>|Object} attachment
+   * @param {=Array.<string>|string} optTargets
    */
-  attachment(text, attachment, optTargets) {
+  attachment(...args) {
+    let text;
+    let attachments = args[1];
+    let optTargets = args[2];
+    if (typeof args[0] === 'object') {
+      attachments = args[0];
+      optTargets = args[1];
+    } else {
+      text = args[0];
+    }
+
     const targets = this._getTargets(optTargets);
     const base = {
       type: TASK_TYPES.ATTACHMENT,
       value: {
         text,
-        attachments: [attachment]
+        attachments: [attachments]
       }
     };
 
-    if (attachment.length) {
-      base.value.attachments = attachment;
+    if (attachments.length) {
+      base.value.attachments = attachments;
     }
 
     // do not send until told otherwise
