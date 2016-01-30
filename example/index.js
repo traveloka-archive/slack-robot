@@ -23,6 +23,7 @@ robot.listen('text', function (req, res) {
 
 // all url protocol will be stripped
 robot.listen('staging05.example.com', function (req, res) {
+  res.text('www-staging05.example.com');
   return res.text('remove http(s) protocol from url').send();
 });
 

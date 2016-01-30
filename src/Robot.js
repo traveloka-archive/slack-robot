@@ -51,7 +51,7 @@ export default class Robot extends EventEmitter {
      * List of message that is not processed yet by listener, mainly because
      * missing information. Currently only stored reaction_added event message
      *
-     * @var {Array.<MessageQueue}
+     * @var {Array.<MessageQueue>}
      * @private
      */
     this._messageQueue = [];
@@ -193,8 +193,8 @@ export default class Robot extends EventEmitter {
 
   /**
    * Send robot response by without listener
-   *
    * Caveat: .reaction. .async is disabled
+   *
    * @public
    * @param {string} target
    */

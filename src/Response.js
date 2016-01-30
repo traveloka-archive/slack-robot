@@ -70,12 +70,7 @@ export default class Response extends EventEmitter {
 
     // do not send until told otherwise
     this._queue.pause();
-
-    targets.forEach(target => {
-      const task = { target, ...base };
-      this._addToQueue(task);
-    });
-
+    this._addToQueues(base, targets);
     return this;
   }
 
@@ -104,12 +99,7 @@ export default class Response extends EventEmitter {
 
     // do not send until told otherwise
     this._queue.pause();
-
-    targets.forEach(target => {
-      const task = { target, ...base };
-      this._addToQueue(task);
-    });
-
+    this._addToQueues(base, targets);
     return this;
   }
 
@@ -134,12 +124,7 @@ export default class Response extends EventEmitter {
 
     // do not send until told otherwise
     this._queue.pause();
-
-    targets.forEach(target => {
-      const task = { target, ...base };
-      this._addToQueue(task);
-    });
-
+    this._addToQueues(base, targets);
     return this;
   }
 
@@ -202,6 +187,13 @@ export default class Response extends EventEmitter {
       this._queue.drain = function () {
         return resolve();
       };
+    });
+  }
+
+  _addToQueues(base, targets) {
+    targets.forEach(target => {
+      const task = { target, ...base };
+      this._addToQueue(task);
     });
   }
 

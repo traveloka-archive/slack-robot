@@ -52,7 +52,7 @@ export default class Message {
  * @param {SlackDataStore} dataStore
  * @param {Object} bot
  * @param {?string} textMessage
- * @see Ref: https://github.com/slackhq/hubot-slack/blob/master/src/slack.coffee#L153
+ * @see https://github.com/slackhq/hubot-slack/blob/master/src/slack.coffee#L153
  * @return {object}
  */
 function parseTextMessage(dataStore, bot, textMessage) {
