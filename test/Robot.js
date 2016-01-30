@@ -148,6 +148,15 @@ describe('Robot', () => {
     robot._vars.concurrency.should.be.equal(1);
   });
 
+  it('should be able to get internal variables', () => {
+    const robot = new Robot('token');
+    const something = { a: { b: { c: { d: 'e' } } } };
+    robot.set('something', something);
+
+    robot.get('concurrency').should.be.equal(1);
+    robot.get('something').should.be.deep.equal(something);
+  });
+
   it('should be able to send without listening', () => {
     const robot = new Robot('token');
     const callback = sinon.spy();

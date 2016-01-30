@@ -43,7 +43,8 @@ export default class Robot extends EventEmitter {
      * @private
      */
     this._vars = {
-      concurrency: 1
+      concurrency: 1,
+      help_generator: false
     };
 
     /**
@@ -174,10 +175,20 @@ export default class Robot extends EventEmitter {
       // special property
       if (property === 'help_generator') {
         this.use(plugins.helpGenerator({ enable: Boolean(value) }));
-      } else {
-        this._vars[property] = value;
       }
+
+      this._vars[property] = value;
     }
+  }
+
+  /**
+   * Get bot property
+   *
+   * @public
+   * @return {any}
+   */
+  get(property) {
+    return this._vars[property];
   }
 
   /**
