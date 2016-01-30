@@ -9,6 +9,7 @@ import Response from '../src/Response';
 chai.use(sinonChai);
 chai.should();
 
+const token = 'xxxx-yyyyyyyyy-zzzz';
 const apiMock = {
   chat: {
     postMessage: sinon.stub()
@@ -37,24 +38,27 @@ const requestMock = {
 };
 
 describe('Response', () => {
-  it('should create queue with default concurrency 1', () => {
-    const res = new Response(apiMock, dataStoreMock, requestMock);
+  it('should initialize correct value', () => {
+    const res = new Response(token, dataStoreMock, requestMock);
+    res._api._token.should.be.equal(token);
+    res._api._requestQueue.concurrency.should.be.equal(1);
     res._queue.concurrency.should.be.equal(1);
   });
 
   it('should create queue with correct concurrency', () => {
-    const res = new Response(apiMock, dataStoreMock, requestMock, 5);
+    const res = new Response(token, dataStoreMock, requestMock, 5);
+    res._api._requestQueue.concurrency.should.be.equal(5);
     res._queue.concurrency.should.be.equal(5);
   });
 
   it('should store default target and message timestamp', () => {
-    const res = new Response(apiMock, dataStoreMock, requestMock, 5);
+    const res = new Response(token, dataStoreMock, requestMock, 5);
     res._defaultTarget.should.be.equal(requestMock.to.id);
     res._messageTimestamp.should.be.equal(requestMock.message.timestamp);
   });
 
   it('should queue text task without running it', () => {
-    const res = new Response(apiMock, dataStoreMock, requestMock, 5);
+    const res = new Response(token, dataStoreMock, requestMock, 5);
     res.text('yolo');
 
     res._queue.paused.should.be.equal(true);
@@ -67,7 +71,7 @@ describe('Response', () => {
   });
 
   it('should queue attachment task without running it', () => {
-    const res = new Response(apiMock, dataStoreMock, requestMock);
+    const res = new Response(token, dataStoreMock, requestMock);
     res.attachment('superb', {});
 
     res._queue.paused.should.be.equal(true);
@@ -83,7 +87,7 @@ describe('Response', () => {
   });
 
   it('should queue upload task without running it', () => {
-    const res = new Response(apiMock, dataStoreMock, requestMock);
+    const res = new Response(token, dataStoreMock, requestMock);
     res.upload('a.txt', 'aaa');
 
     res._queue.paused.should.be.equal(true);
@@ -99,7 +103,7 @@ describe('Response', () => {
   });
 
   it('should queue reaction task without running it', () => {
-    const res = new Response(apiMock, dataStoreMock, requestMock);
+    const res = new Response(token, dataStoreMock, requestMock);
     res.reaction(':+1:');
 
     res._queue.paused.should.be.equal(true);
@@ -116,7 +120,7 @@ describe('Response', () => {
   });
 
   it('should add text task as many as targets', () => {
-    const res = new Response(apiMock, dataStoreMock, requestMock);
+    const res = new Response(token, dataStoreMock, requestMock);
     res.text('yolo', ['D1234', 'C2345']);
 
     res._queue.length().should.be.equal(2);
@@ -133,7 +137,7 @@ describe('Response', () => {
   });
 
   it('should add attachment task as many as targets', () => {
-    const res = new Response(apiMock, dataStoreMock, requestMock);
+    const res = new Response(token, dataStoreMock, requestMock);
     res.attachment('hello', {}, ['C13552', 'G27924']);
 
     res._queue.length().should.be.equal(2);
@@ -156,7 +160,7 @@ describe('Response', () => {
   });
 
   it('should add file task as many as targets', () => {
-    const res = new Response(apiMock, dataStoreMock, requestMock);
+    const res = new Response(token, dataStoreMock, requestMock);
     res.upload('snippet.txt', 'snippet', ['C13552', 'G27924']);
 
     res._queue.length().should.be.equal(2);
@@ -179,7 +183,7 @@ describe('Response', () => {
   });
 
   it('should filter unknown target', () => {
-    const res = new Response(apiMock, dataStoreMock, requestMock);
+    const res = new Response(token, dataStoreMock, requestMock);
     res.upload('snippet.txt', 'snippet', ['C13552', '@unknown']);
 
     res._queue.length().should.be.equal(1);
@@ -194,7 +198,7 @@ describe('Response', () => {
   });
 
   it('allow array of attachment in res.attachment()', () => {
-    const res = new Response(apiMock, dataStoreMock, requestMock);
+    const res = new Response(token, dataStoreMock, requestMock);
     res.attachment('hello', [
       { a: 'b' }, { c: 'd' }, { e: 'f' }
     ]);
@@ -215,7 +219,7 @@ describe('Response', () => {
   });
 
   it('allow single entry to be passed in optTargets', () => {
-    const res = new Response(apiMock, dataStoreMock, requestMock);
+    const res = new Response(token, dataStoreMock, requestMock);
     res.text('hello', 'D1234');
 
     res._queue.length().should.be.equal(1);
@@ -227,7 +231,7 @@ describe('Response', () => {
   });
 
   it('allow channel name (not id) to be passed in optTargets', () => {
-    const res = new Response(apiMock, dataStoreMock, requestMock);
+    const res = new Response(token, dataStoreMock, requestMock);
     const channelMock = {
       id: 'C557445',
       name: 'general'
@@ -245,7 +249,7 @@ describe('Response', () => {
   });
 
   it('allow username (not id) to be passed in optTargets', () => {
-    const res = new Response(apiMock, dataStoreMock, requestMock);
+    const res = new Response(token, dataStoreMock, requestMock);
     const userMock = {
       id: 'U269430',
       name: 'anon'
@@ -263,8 +267,9 @@ describe('Response', () => {
   });
 
   it('should flush queue when .send() is called', done => {
-    const res = new Response(apiMock, dataStoreMock, requestMock, 5);
+    const res = new Response(token, dataStoreMock, requestMock, 5);
 
+    res._api = apiMock;
     apiMock.chat.postMessage.callsArgWith(3, null, {});
     apiMock.reactions.add.callsArgWith(2, null, {});
 
@@ -279,7 +284,7 @@ describe('Response', () => {
   });
 
   it('should open dm first when sending to username', done => {
-    const res = new Response(apiMock, dataStoreMock, requestMock);
+    const res = new Response(token, dataStoreMock, requestMock);
     const dmOpenApiMock = {
       ok: true,
       channel: {
@@ -289,6 +294,7 @@ describe('Response', () => {
 
     const spy = sinon.spy(Response.prototype, '_sendResponse');
 
+    res._api = apiMock;
     dataStoreMock.getUserByName.withArgs('daendels').returns({ id: 'U532122' });
     apiMock.dm.open.callsArgWith(1, null, dmOpenApiMock);
     apiMock.chat.postMessage.callsArgWith(3, null, {});
@@ -309,9 +315,10 @@ describe('Response', () => {
   });
 
   it('should emit error when failed to open dm (network error)', done => {
-    const res = new Response(apiMock, dataStoreMock, requestMock);
+    const res = new Response(token, dataStoreMock, requestMock);
     const dmOpenApiMock = new Error('Network error');
 
+    res._api = apiMock;
     dataStoreMock.getUserByName.withArgs('daendels').returns({ id: 'U532122' });
     apiMock.dm.open.callsArgWith(1, dmOpenApiMock);
 
@@ -324,13 +331,14 @@ describe('Response', () => {
   });
 
   it('should emit error when failed to open dm (failed api)', done => {
-    const res = new Response(apiMock, dataStoreMock, requestMock);
+    const res = new Response(token, dataStoreMock, requestMock);
     const errorMessage = 'not_authed';
     const dmOpenApiMock = {
       ok: false,
       error: errorMessage
     };
 
+    res._api = apiMock;
     dataStoreMock.getUserByName.withArgs('daendels').returns({ id: 'U532122' });
     apiMock.dm.open.callsArgWith(1, null, dmOpenApiMock);
 
@@ -343,9 +351,10 @@ describe('Response', () => {
   });
 
   it('should emit error if failed sending task', done => {
-    const res = new Response(apiMock, dataStoreMock, requestMock);
+    const res = new Response(token, dataStoreMock, requestMock);
     const errorMock = new Error('failed to post message');
 
+    res._api = apiMock;
     apiMock.chat.postMessage.callsArgWith(3, errorMock);
 
     res.on('task_error', err => {
@@ -359,9 +368,10 @@ describe('Response', () => {
   });
 
   it('should emit error if failed sending attachment', done => {
-    const res = new Response(apiMock, dataStoreMock, requestMock);
+    const res = new Response(token, dataStoreMock, requestMock);
     const errorMock = new Error('failed to post attachment');
 
+    res._api = apiMock;
     apiMock.chat.postMessage.callsArgWith(3, errorMock);
 
     res.on('task_error', err => {
@@ -375,9 +385,10 @@ describe('Response', () => {
   });
 
   it('should emit error if failed sending reaction', done => {
-    const res = new Response(apiMock, dataStoreMock, requestMock);
+    const res = new Response(token, dataStoreMock, requestMock);
     const errorMock = new Error('failed to add reaction');
 
+    res._api = apiMock;
     apiMock.reactions.add.callsArgWith(2, errorMock);
 
     res.on('task_error', err => {
@@ -391,7 +402,7 @@ describe('Response', () => {
   });
 
   it('should not handle unknown task type', done => {
-    const res = new Response(apiMock, dataStoreMock, requestMock);
+    const res = new Response(token, dataStoreMock, requestMock);
     const unknownTask = {
       type: '???',
       target: '???',
@@ -410,7 +421,7 @@ describe('Response', () => {
   });
 
   it('should be able to send file', done => {
-    const res = new Response(apiMock, dataStoreMock, requestMock);
+    const res = new Response(token, dataStoreMock, requestMock);
 
     nock('https://slack.com')
     .post('/api/files.upload')
@@ -429,7 +440,7 @@ describe('Response', () => {
   });
 
   it('should emit error if network error when uploading file', done => {
-    const res = new Response(apiMock, dataStoreMock, requestMock);
+    const res = new Response(token, dataStoreMock, requestMock);
     const errorMessage = 'Some network error';
 
     nock('https://slack.com')
@@ -445,7 +456,7 @@ describe('Response', () => {
   });
 
   it('should emit error if files.upload api failed', done => {
-    const res = new Response(apiMock, dataStoreMock, requestMock);
+    const res = new Response(token, dataStoreMock, requestMock);
     const errorMessage = 'not_authed';
 
     nock('https://slack.com')
@@ -464,7 +475,7 @@ describe('Response', () => {
   });
 
   it('should allow use file opts when using readable stream', done => {
-    const res = new Response(apiMock, dataStoreMock, requestMock);
+    const res = new Response(token, dataStoreMock, requestMock);
 
     nock('https://slack.com')
     .post('/api/files.upload')
@@ -479,7 +490,8 @@ describe('Response', () => {
   });
 
   it('should be able to wrap async task', done => {
-    const res = new Response(apiMock, dataStoreMock, requestMock);
+    const res = new Response(token, dataStoreMock, requestMock);
+    res._api = apiMock;
 
     res.async(end => {
       // simulate async task
@@ -504,7 +516,8 @@ describe('Response', () => {
   });
 
   it('should give shortcut to end response for async wrapper', done => {
-    const res = new Response(apiMock, dataStoreMock, requestMock);
+    const res = new Response(token, dataStoreMock, requestMock);
+    res._api = apiMock;
 
     const r = res.async(end => {
       // simulate async task
@@ -524,8 +537,9 @@ describe('Response', () => {
   });
 
   it('should give shortcut to end response for async wrapper', done => {
-    const res = new Response(apiMock, dataStoreMock, requestMock);
+    const res = new Response(token, dataStoreMock, requestMock);
     const errorMock = new Error('some async error');
+    res._api = apiMock;
 
     const r = res.async(end => {
       // simulate async task

@@ -37,6 +37,12 @@ export default class Robot extends EventEmitter {
     this.acls = acls;
 
     /**
+     *
+     * @private
+     */
+    this._token = token;
+
+    /**
      * Bot properties
      *
      * @var {Object}
@@ -86,7 +92,7 @@ export default class Robot extends EventEmitter {
      * @param {string} token
      * @private
      */
-    this._api = new WebClient(token);
+    this._api = new WebClient(token, { maxRequestConcurrency: 5 });
 
     /**
      *
@@ -207,7 +213,7 @@ export default class Robot extends EventEmitter {
     }
 
     const req = { to: { id: target }, message: {} };
-    const res = new Response(this._api, this._rtm.dataStore, req, this._vars.concurrency);
+    const res = new Response(this._token, this._rtm.dataStore, req, this._vars.concurrency);
 
     ['reaction', 'async'].forEach(invalidMethod => {
       Object.defineProperty(res, invalidMethod, {
@@ -352,16 +358,8 @@ export default class Robot extends EventEmitter {
       return;
     }
 
-    // set concurrency based on current data
-    let concurrency = parseInt(this._vars.concurrency, 10);
-    /* istanbul ignore if */
-    if (!concurrency) {
-      concurrency = 1;
-    }
-    this._api._requestQueue.concurrency = concurrency;
-
     const request = new Request(message, listener);
-    const response = new Response(this._api, this._rtm.dataStore, request, concurrency);
+    const response = new Response(this._token, this._rtm.dataStore, request, this._vars.concurrency);
     response.on('task_error', err => this.emit('response_failed', err));
 
     this._checkListenerAcl(listener.acls, request, response, () => {

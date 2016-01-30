@@ -4,6 +4,7 @@ import fs from 'fs';
 import request from 'request';
 import Promise from 'bluebird';
 import EventEmitter from 'eventemitter3';
+import { WebClient } from 'slack-client';
 
 import {
   stripEmoji,
@@ -32,19 +33,33 @@ export default class Response extends EventEmitter {
    * @param {Request} request
    * @param {number} concurrency (defaults to 1 to allow serial response sending)
    */
-  constructor(api, dataStore, request, concurrency) {
-    super();
-
-    this._api = api;
-    this._dataStore = dataStore;
-    this._defaultTarget = request.to.id;
-    this._messageTimestamp = request.message.timestamp;
+  constructor(slackToken, dataStore, request, concurrency = 1) {
+    concurrency = parseInt(concurrency, 10);
 
     if (!concurrency) {
       concurrency = 1;
     }
 
+    super();
+
+    this._dataStore = dataStore;
+    this._defaultTarget = request.to.id;
+    this._messageTimestamp = request.message.timestamp;
+
     /**
+     * We use new instance of WebClient instead of passing from robot
+     * to allow different concurrency option
+     *
+     * @type {WebClient}
+     */
+    this._api = new WebClient(slackToken, { maxRequestConcurrency: concurrency });
+
+    /**
+     * This is where we queue our response before actually sending them
+     * by default every new item added the queue will not be processed
+     * automatically (the queue will be paused) until the user explicitly
+     * call .send()
+     *
      * @type {AsyncQueue}
      */
     this._queue = async.queue(

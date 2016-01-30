@@ -8,6 +8,7 @@ import Listeners from '../src/Listeners';
 import Response from '../src/Response';
 import Log from 'log';
 import { RtmClient, WebClient } from 'slack-client';
+import Chat from 'slack-client/lib/clients/web/facets/chat';
 import plugins from '../src/plugins';
 
 chai.use(sinonChai);
@@ -21,6 +22,7 @@ describe('Robot', () => {
     robot._ignoredChannels.should.be.deep.equal([]);
     robot._rtm.should.be.instanceof(RtmClient);
     robot._api.should.be.instanceof(WebClient);
+    robot._api._requestQueue.concurrency.should.be.equal(5);
     robot._listeners.should.be.instanceof(Listeners);
 
     // check event emitter
@@ -801,17 +803,21 @@ describe('Robot', () => {
         return res.text('failed').send();
       }
     };
-    const errorMock = new Error('something happened');
 
-    const listenerStub = sinon.stub(Listeners.prototype, 'find').returns(listenerMock);
+    const postMessageMock = sinon.stub(Chat.prototype, 'postMessage');
+    const listenerStub = sinon.stub(Listeners.prototype, 'find');
+
+    const errorMock = new Error('something happened');
 
     robot._rtm.dataStore.getUserById.withArgs(messagePayload.user).returns(userMock);
     robot._rtm.dataStore.getChannelGroupOrDMById.withArgs(messagePayload.channel).returns(channelMock);
-    robot._api.chat.postMessage = sinon.stub().callsArgWith(3, errorMock);
+    postMessageMock.callsArgWith(3, errorMock);
+    listenerStub.returns(listenerMock);
 
     robot.on('response_failed', err => {
       err.should.be.equal(errorMock);
       listenerStub.restore();
+      postMessageMock.restore();
       done();
     });
 
@@ -850,11 +856,13 @@ describe('Robot', () => {
       }
     };
 
-    const listenerStub = sinon.stub(Listeners.prototype, 'find').returns(listenerMock);
+    const postMessageMock = sinon.stub(Chat.prototype, 'postMessage');
+    const listenerStub = sinon.stub(Listeners.prototype, 'find');
 
     robot._rtm.dataStore.getUserById.withArgs(messagePayload.user).returns(userMock);
     robot._rtm.dataStore.getChannelGroupOrDMById.withArgs(messagePayload.channel).returns(channelMock);
-    robot._api.chat.postMessage = sinon.stub().callsArgWith(3, errorMock);
+    listenerStub.returns(listenerMock);
+    postMessageMock.callsArgWith(3, errorMock);
 
     robot.on('error', err => {
       err.should.be.equal(errorMock);
