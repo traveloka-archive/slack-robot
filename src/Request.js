@@ -41,6 +41,7 @@ export default class Request {
     this.to = to;
     this.params = params;
     this.matches = matches;
+    this.listener = listener;
 
     Object.defineProperty(this, 'user', {
       enumerable: false,

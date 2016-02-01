@@ -48,6 +48,7 @@ describe('Request', () => {
     req.to.should.be.deep.equal(channel);
     req.params.should.be.deep.equal({});
     req.matches.should.be.deep.equal([]);
+    req.listener.should.be.deep.equal(listener);
   });
 
   it('should have hidden channel and user object', () => {
