@@ -34,17 +34,13 @@ export default class Response extends EventEmitter {
    * @param {number} concurrency (defaults to 1 to allow serial response sending)
    */
   constructor(slackToken, dataStore, request, concurrency = 1) {
-    concurrency = parseInt(concurrency, 10);
-
-    if (!concurrency) {
-      concurrency = 1;
-    }
-
     super();
 
     this._dataStore = dataStore;
     this._defaultTarget = request.to.id;
     this._messageTimestamp = request.message.timestamp;
+
+    concurrency = parseInt(concurrency, 10);
 
     /**
      * We use new instance of WebClient instead of passing from robot
@@ -103,14 +99,20 @@ export default class Response extends EventEmitter {
    * @param {=Array.<string>|string} optTargets
    */
   attachment(...args) {
-    let text;
-    let attachments = args[1];
-    let optTargets = args[2];
-    if (typeof args[0] === 'object') {
-      attachments = args[0];
-      optTargets = args[1];
-    } else {
+    let text, attachments, optTargets;
+
+    if (typeof args[0] === 'string') {
       text = args[0];
+      attachments = args[1];
+
+      if (arguments.length === 3) {
+        optTargets = arguments[2];
+      }
+    } else {
+      attachments = args[0];
+      if (arguments.length === 2) {
+        optTargets = arguments[1];
+      }
     }
 
     const targets = this._getTargets(optTargets);

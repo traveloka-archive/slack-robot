@@ -291,7 +291,7 @@ describe('Response', () => {
     apiMock.reactions.add.callsArgWith(2, null, {});
 
     res.text('hello');
-    res.attachment('attachment', [{}]);
+    res.attachment([{}], 'C124542');
     res.reaction(':grinning:');
 
     res.send().then(() => {
