@@ -1,7 +1,7 @@
 import Log from 'log';
 import EventEmitter from 'eventemitter3';
 import Promise from 'bluebird';
-import { RtmClient, WebClient, EVENTS } from 'slack-client';
+import { RtmClient, WebClient, CLIENT_EVENTS, RTM_EVENTS as MESSAGE_TYPE } from 'slack-client';
 import { MemoryDataStore } from 'slack-client/lib/data-store';
 import Listeners from './Listeners';
 import Message from './Message';
@@ -11,8 +11,7 @@ import plugins from './plugins';
 import acls from './acls';
 
 const logger = new Log('info');
-const RTM_EVENTS = EVENTS.CLIENT.RTM;
-const MESSAGE_TYPE = EVENTS.API.EVENTS;
+const CLIENT_RTM_EVENTS = CLIENT_EVENTS.RTM;
 
 export default class Robot extends EventEmitter {
   constructor(token) {
@@ -265,7 +264,7 @@ export default class Robot extends EventEmitter {
    * @public
    */
   start() {
-    this._rtm.on(RTM_EVENTS.AUTHENTICATED, () => {
+    this._rtm.on(CLIENT_RTM_EVENTS.AUTHENTICATED, () => {
       this.bot = this._rtm.dataStore.getUserById(this._rtm.activeUserId);
       logger.info(`Logged in as ${this.bot.name}`);
     });

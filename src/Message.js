@@ -1,7 +1,5 @@
-import { EVENTS } from 'slack-client';
+import { RTM_EVENTS as MESSAGE_TYPE } from 'slack-client';
 import { stripEmoji } from './util';
-
-const MESSAGE_TYPE = EVENTS.API.EVENTS;
 
 /**
  * @public
