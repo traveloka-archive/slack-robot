@@ -1,5 +1,6 @@
 import chai from 'chai';
 import { describe, it } from 'mocha';
+import sinon from 'sinon';
 import Listener from '../src/Listener';
 
 chai.should();
@@ -24,17 +25,17 @@ describe('Listener', () => {
     listener.description.should.be.equal(description);
   });
 
-  it('should be able to store acl', () => {
+  it.only('should be able to store acl', () => {
     const listener = new Listener('message', 'hi', callback);
-    const description = 'Some description message';
-    listener.desc(description);
+    const aclFn = sinon.spy();
+    listener.acl(aclFn);
 
-    listener.description.should.be.equal(description);
+    listener.acls.should.be.deep.equal([aclFn]);
   });
 
   it('should be able to store multiple acl', () => {
-    const acl1 = function acl1() {};
-    const acl2 = function acl2() {};
+    const acl1 = sinon.spy();
+    const acl2 = sinon.spy();
     const listener = new Listener('message', 'hi', callback)
     .acl(acl1, acl2);
 
