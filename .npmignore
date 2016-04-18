@@ -1,9 +1,0 @@
-src/
-test/
-.nyc_output/
-coverage/
-examples/
-.babelrc
-.gitignore
-.travis.yml
-.tern-project

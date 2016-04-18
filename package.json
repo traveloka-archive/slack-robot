@@ -11,6 +11,11 @@
     "upload-coverage": "nyc npm test && nyc report --reporter=lcov && codecov",
     "prepublish": "babel -d lib/ src/"
   },
+  "files": [
+    "index.js",
+    "README.md",
+    "lib/"
+  ],
   "marlint": {
     "ignores": [
       "lib/*.js",
@@ -19,6 +24,12 @@
     "rules": {
       "no-fallthrough": 0
     }
+  },
+  "babel": {
+    "preset": [
+      "es2015",
+      "stage-2"
+    ]
   },
   "repository": {
     "type": "git",
