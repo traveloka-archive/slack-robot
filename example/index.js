@@ -1,9 +1,11 @@
-// in real app require('slack-robot') instead
 /* eslint no-var: 0 */
 /* eslint prefer-arrow-callback: 0 */
 /* eslint prefer-template: 0 */
+/* eslint no-console: 0 */
 var fs = require('fs');
 var Promise = require('bluebird');
+
+// in real app require('slack-robot') instead
 var Robot = require('..');
 
 var token = process.env.SLACK_TOKEN;
@@ -18,7 +20,13 @@ robot.ignore('#bot-playground');
 // listen to text message
 robot.listen('text', function (req, res) {
   var username = req.user.name;
-  return res.text('string with @' + username + ', #general, and @everyone').send();
+
+  if (req.channel.type === 'dm') {
+    res.text('string with @' + username + ', #general, and @everyone');
+    return res.send();
+  } else {
+    return res.text('string @' + username + ' #bot-playground').send();
+  }
 });
 
 // all url protocol will be stripped
@@ -105,6 +113,12 @@ robot.listen('promise', function (req, res) {
     return res.send();
   });
 });
+
+// listen with acl
+robot.listen('acl', function (req, res) {
+  res.text('responded').send();
+  // only respond in channel/group if mentioned
+}).acl(robot.acls.dynamicMention);
 
 // send multiple message as once
 robot.set('concurrency', 10);
