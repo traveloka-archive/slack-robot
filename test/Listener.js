@@ -25,7 +25,7 @@ describe('Listener', () => {
     listener.description.should.be.equal(description);
   });
 
-  it.only('should be able to store acl', () => {
+  it('should be able to store acl', () => {
     const listener = new Listener('message', 'hi', callback);
     const aclFn = sinon.spy();
     listener.acl(aclFn);
