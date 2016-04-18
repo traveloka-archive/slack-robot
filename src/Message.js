@@ -18,7 +18,7 @@ export default class Message {
     let value = {};
     let timestamp;
 
-    switch (messageObject.type) {
+    switch (type) {
       case MESSAGE_TYPE.MESSAGE:
         channelId = messageObject.channel;
         value = parseTextMessage(dataStore, bot, messageObject.text);
@@ -61,28 +61,27 @@ function parseTextMessage(dataStore, bot, textMessage) {
   }
 
   let text = textMessage.replace(/<([@#!])?([^>|]+)(?:\|([^>]+))?>/g, (m, type, link, label) => {
-    let user, channel;
     switch (type) {
-      case '@':
+      case '@': {
         if (label) {
           return `@${label}`;
         }
 
-        user = dataStore.getUserById(link);
+        const user = dataStore.getUserById(link);
         if (user) {
           return `@${user.name}`;
         }
-
-      case '#':
+      }
+      case '#': {
         if (label) {
           return `#${label}`;
         }
 
-        channel = dataStore.getChannelById(link);
+        const channel = dataStore.getChannelById(link);
         if (channel) {
           return `#${channel.name}`;
         }
-
+      }
       case '!':
         if (['channel', 'group', 'everyone'].indexOf(link) !== -1) {
           return `@${link}`;

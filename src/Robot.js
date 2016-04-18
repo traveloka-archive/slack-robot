@@ -374,8 +374,11 @@ export default class Robot extends EventEmitter {
     }
 
     acl(request, response, () => {
-      acls.splice(0, 1);
-      this._checkListenerAcl(acls, request, response, callback);
+      // remove array without affecting original array
+      // do not use splice as array is mutable which means
+      // original acls will be changed if you use splice
+      const nextAcls = acls.filter((el, id) => id > 0);
+      this._checkListenerAcl(nextAcls, request, response, callback);
     });
   }
 
