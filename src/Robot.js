@@ -13,8 +13,12 @@ import acls from './acls';
 const logger = new Log('info');
 const CLIENT_RTM_EVENTS = CLIENT_EVENTS.RTM;
 
+const DEFAULT_OPTIONS = {
+  dynamicMention: false
+};
+
 export default class Robot extends EventEmitter {
-  constructor(token) {
+  constructor(token, options = DEFAULT_OPTIONS) {
     if (!token) {
       throw new Error('Invalid slack access token');
     }
@@ -34,6 +38,12 @@ export default class Robot extends EventEmitter {
      * @public
      */
     this.acls = acls;
+
+    /**
+     *
+     * @private
+     */
+    this._options = options;
 
     /**
      *
@@ -133,6 +143,10 @@ export default class Robot extends EventEmitter {
     }
 
     const listener = this._listeners.add(type, value, callback);
+    if (this._options.dynamicMention) {
+      listener.acl(this.acls.dynamicMention);
+    }
+
     return listener;
   }
 

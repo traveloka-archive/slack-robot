@@ -18,6 +18,7 @@ describe('Robot', () => {
   it('should set some sensible defaults', () => {
     const robot = new Robot('token');
     should.not.exist(robot.bot);
+    robot._options.should.be.deep.equal({ dynamicMention: false });
     robot._vars.concurrency.should.be.equal(1);
     robot._ignoredChannels.should.be.deep.equal([]);
     robot._rtm.should.be.instanceof(RtmClient);
@@ -55,6 +56,22 @@ describe('Robot', () => {
 
     robot.when('reaction_type', '+1', callback);
     addListenerStub.calledWithExactly('reaction_type', '+1', callback).should.be.equal(true);
+    addListenerStub.restore();
+  });
+
+  it('should be add dynamic mention acl if options set', () => {
+    const robot = new Robot('token', { dynamicMention: true });
+    const addListenerStub = sinon.stub(Listeners.prototype, 'add');
+    const listenerMock = { acl: sinon.stub() };
+    const callback = sinon.spy();
+
+    addListenerStub.returns(listenerMock);
+
+    robot.when('reaction_type', '+1', callback);
+    addListenerStub.should.be.calledWithExactly(
+      'reaction_type', '+1', callback
+    );
+    listenerMock.acl.should.be.calledWithExactly(robot.acls.dynamicMention);
     addListenerStub.restore();
   });
 
