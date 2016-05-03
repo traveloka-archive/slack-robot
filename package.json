@@ -6,9 +6,10 @@
   "scripts": {
     "lint": "marlint src/**/*.js",
     "unit": "mocha --compilers js:babel-core/register",
-    "test": "npm run lint && npm run unit test/**/**/*.js",
-    "coverage": "nyc npm test && nyc report --reporter=html",
-    "upload-coverage": "nyc npm test && nyc report --reporter=lcov && codecov",
+    "unit:all": "npm run unit test/**/**/*.js",
+    "test": "npm run lint && npm run unit:all",
+    "coverage": "nyc npm run unit:all && nyc report --reporter=html",
+    "upload-coverage": "nyc npm run unit:all && nyc report --reporter=lcov && codecov",
     "prepublish": "babel -d lib/ src/"
   },
   "files": [
