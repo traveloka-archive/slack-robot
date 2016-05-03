@@ -5,6 +5,9 @@ import request from 'request';
 import Promise from 'bluebird';
 import EventEmitter from 'eventemitter3';
 import { WebClient } from 'slack-client';
+import {
+  RESPONSE_EVENTS
+} from './Events';
 
 import {
   stripEmoji,
@@ -258,10 +261,10 @@ export default class Response extends EventEmitter {
   _addToQueue(task) {
     this._queue.push(task, (err, data) => {
       if (err) {
-        return this.emit('task_error', err);
+        return this.emit(RESPONSE_EVENTS.TASK_ERROR, err);
       }
 
-      this.emit('task_finished', task, data);
+      this.emit(RESPONSE_EVENTS.TASK_FINISHED, task, data);
     });
   }
 

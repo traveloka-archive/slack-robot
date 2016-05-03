@@ -7,6 +7,7 @@ var Promise = require('bluebird');
 
 // in real app require('slack-robot') instead
 var Robot = require('..');
+var EVENTS = Robot.EVENTS;
 
 var token = process.env.SLACK_TOKEN;
 var robot = new Robot(token);
@@ -164,33 +165,33 @@ robot.to('@username', function (res) {
   return res.text('hello').send();
 });
 
-robot.on('own_message', function (message) {
+robot.on(EVENTS.OWN_MESSAGE, function (message) {
   // everytime bot send message, it will also receive
   // its own message, listen to this event if you want
   // to do something after receiving its own message
 });
 
-robot.on('message_no_sender', function (message) {
+robot.on(EVENTS.MESSAGE_NO_SENDER, function (message) {
   console.log('no_sender', message);
 });
 
-robot.on('ignored_channel', function (message) {
+robot.on(EVENTS.IGNORED_CHANNEL, function (message) {
   console.log('ignored_channel', message);
 });
 
-robot.on('no_listener_match', function (message) {
+robot.on(EVENTS.NO_LISTENER_MATCH, function (message) {
   console.log('no_listener_match');
 });
 
-robot.on('response_failed', function (err) {
+robot.on(EVENTS.RESPONSE_FAILED, function (err) {
   console.log('response_failed', err.stack);
 });
 
-robot.on('error', function (err) {
+robot.on(EVENTS.ERROR, function (err) {
   console.log('error', err.stack);
 });
 
-robot.on('message_handled', function (message) {
+robot.on(EVENTS.REQUEST_HANDLED, function (message) {
   // after response sent
   console.log('handled', message.value);
 });

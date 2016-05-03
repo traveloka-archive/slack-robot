@@ -9,6 +9,10 @@ import Request from './Request';
 import Response from './Response';
 import plugins from './plugins';
 import acls from './acls';
+import {
+  ROBOT_EVENTS,
+  RESPONSE_EVENTS
+} from './Events';
 
 const logger = new Log('info');
 const CLIENT_RTM_EVENTS = CLIENT_EVENTS.RTM;
@@ -316,7 +320,7 @@ export default class Robot extends EventEmitter {
        * event, queue them until "message_changed" event arrived. Note
        * that this is not applicable for text/attachment
        */
-      if (message.item.type !== 'message') {
+      if (message.item.type !== MESSAGE_TYPE.MESSAGE) {
         return this._queueMessage(message);
       }
 
@@ -353,24 +357,24 @@ export default class Robot extends EventEmitter {
 
     if (!message.from) {
       // ignore invalid message (no sender)
-      this.emit('message_no_sender', msg);
+      this.emit(ROBOT_EVENTS.MESSAGE_NO_SENDER, msg);
       return;
     }
 
     if (!message.to) {
-      this.emit('message_no_channel', msg);
+      this.emit(ROBOT_EVENTS.MESSAGE_NO_CHANNEL, msg);
       return;
     }
 
     if (message.from.id === this.bot.id) {
       // ignore own message
-      this.emit('own_message', message);
+      this.emit(ROBOT_EVENTS.OWN_MESSAGE, message);
       return;
     }
 
     for (let i = 0; i < this._ignoredChannels.length; i++) {
       if (message.to.name && this._ignoredChannels[i].indexOf(message.to.name) > -1) {
-        this.emit('ignored_channel', message);
+        this.emit(ROBOT_EVENTS.IGNORED_CHANNEL, message);
         return;
       }
     }
@@ -378,13 +382,13 @@ export default class Robot extends EventEmitter {
     const listener = this._listeners.find(message);
 
     if (!listener) {
-      this.emit('no_listener_match', message);
+      this.emit(ROBOT_EVENTS.NO_LISTENER_MATCH, message);
       return;
     }
 
     const request = new Request(message, listener);
     const response = new Response(this._token, this._rtm.dataStore, request, this._vars.concurrency);
-    response.on('task_error', err => this.emit('response_failed', err));
+    response.on(RESPONSE_EVENTS.TASK_ERROR, err => this.emit(ROBOT_EVENTS.RESPONSE_FAILED, err));
 
     this._checkListenerAcl(listener.acls, request, response, () => {
       this._handleRequest(request, response, listener.callback);
@@ -417,8 +421,8 @@ export default class Robot extends EventEmitter {
     new Promise(resolve => {
       return resolve(callback(request, response));
     })
-    .then(() => this.emit('request_handled', request))
-    .catch(err => this.emit('error', err));
+    .then(() => this.emit(ROBOT_EVENTS.REQUEST_HANDLED, request))
+    .catch(err => this.emit(ROBOT_EVENTS.ERROR, err));
   }
 
   /**
@@ -450,7 +454,7 @@ export default class Robot extends EventEmitter {
    */
   _getQueueEntry(message) {
     switch (message.type) {
-      case 'reaction_added':
+      case MESSAGE_TYPE.REACTION_ADDED:
         if (message.item.type === 'file') {
           return {
             id: message.item.file,
@@ -527,3 +531,5 @@ export default class Robot extends EventEmitter {
     return false;
   }
 }
+
+Robot.EVENTS = ROBOT_EVENTS;
