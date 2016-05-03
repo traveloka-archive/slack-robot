@@ -38,7 +38,7 @@ export default class Response extends EventEmitter {
     super();
 
     this._dataStore = dataStore;
-    this._defaultTarget = request.to.id;
+    this._defaultTarget = [request.to.id];
     this._messageTimestamp = request.message.timestamp;
 
     concurrency = parseInt(concurrency, 10);
@@ -66,6 +66,19 @@ export default class Response extends EventEmitter {
   }
 
   /**
+   * Change default target, only used internally in robot.to() method.
+   * Because robot.to is supposed to used by human, it's possible
+   * that given array of target contain user name or channel name
+   * and not an id, so we need to convert them first
+   *
+   * @internal
+   * @param {Array.<string>} defaultTarget
+   */
+  setDefaultTarget(defaultTarget) {
+    this._defaultTarget = this._mapTargetToId(defaultTarget);
+  }
+
+  /**
    * Send basic text message
    *
    * @public
@@ -74,7 +87,7 @@ export default class Response extends EventEmitter {
    * @return {Response}
    */
   text(text, ...optTargets) {
-    const targets = this._getTargets(optTargets);
+    const targets = this._mapTargetToId(optTargets);
     const base = {
       type: TASK_TYPES.TEXT,
       value: text
@@ -116,7 +129,7 @@ export default class Response extends EventEmitter {
       }
     }
 
-    const targets = this._getTargets(optTargets);
+    const targets = this._mapTargetToId(optTargets);
     const base = {
       type: TASK_TYPES.ATTACHMENT,
       value: {
@@ -145,7 +158,7 @@ export default class Response extends EventEmitter {
    * @see https://nodejs.org/api/fs.html
    */
   upload(filename, content, ...optTargets) {
-    const targets = this._getTargets(optTargets);
+    const targets = this._mapTargetToId(optTargets);
     const base = {
       type: TASK_TYPES.UPLOAD,
       value: {
@@ -173,7 +186,7 @@ export default class Response extends EventEmitter {
       target: this._defaultTarget,
       value: {
         emoji: stripEmoji(emoji),
-        channel: this._defaultTarget,
+        channel: this._defaultTarget[0],
         timestamp: this._messageTimestamp
       }
     };
@@ -427,14 +440,15 @@ export default class Response extends EventEmitter {
   }
 
   /**
-   * Check whether use supplied target or default target
+   * Convert given array of target into array of id.
+   * If no target is specified, use defaultTarget
    *
    * @private
    * @param {=Array.<string>} targets
    * @return {Array.<string>}
    */
-  _getTargets(optTargets) {
-    const targets = optTargets && optTargets.length > 0 ? optTargets : [this._defaultTarget];
+  _mapTargetToId(optTargets) {
+    const targets = optTargets && optTargets.length > 0 ? optTargets : this._defaultTarget;
     const idFormat = ['C', 'G', 'D'];
 
     return targets.map(target => {

@@ -215,18 +215,29 @@ export default class Robot extends EventEmitter {
    * Caveat: .reaction. .async is disabled
    *
    * @public
-   * @param {string} target
+   * @param {...string} target
+   * @param {Function} callback
    */
-  to(target, callback) {
+  to(...args) {
+    // Hack to allow var args to be specified as first argument
+    // instead of last
+    const callback = args.splice(args.length - 1)[0];
+    const target = args;
+
     if (this.bot === null) {
       // not connected
       return setTimeout(() => {
-        this.to(target, callback);
+        this.to(...target, callback);
       }, 100);
     }
 
-    const req = { to: { id: target }, message: {} };
+    // At first we create a faux request to make sure we can create
+    // response object properly, after that we change default target
+    // in response object so user can just run res.text without having
+    // to think about target id anymore
+    const req = { to: { id: target[0] }, message: {} };
     const res = new Response(this._token, this._rtm.dataStore, req, this._vars.concurrency);
+    res.setDefaultTarget(target);
 
     ['reaction', 'async'].forEach(invalidMethod => {
       Object.defineProperty(res, invalidMethod, {

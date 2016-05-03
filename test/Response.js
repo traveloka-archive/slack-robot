@@ -57,8 +57,17 @@ describe('Response', () => {
 
   it('should store default target and message timestamp', () => {
     const res = new Response(token, dataStoreMock, requestMock, 5);
-    res._defaultTarget.should.be.equal(requestMock.to.id);
+    res._defaultTarget.should.be.deep.equal([requestMock.to.id]);
     res._messageTimestamp.should.be.equal(requestMock.message.timestamp);
+  });
+
+  it('should use mapTargetToId when setting default target', () => {
+    const res = new Response(token, dataStoreMock, requestMock, 5);
+    const target = ['a', 'b', 'c'];
+    const mapStub = sinon.stub(Response.prototype, '_mapTargetToId');
+    res.setDefaultTarget(target);
+    mapStub.should.be.calledWithExactly(target);
+    mapStub.restore();
   });
 
   it('should queue text task without running it', () => {
@@ -151,7 +160,7 @@ describe('Response', () => {
     res._queue.paused.should.be.equal(true);
     res._queue.length().should.be.equal(1);
     res._queue.tasks[0].data.should.deep.equal({
-      target: requestMock.to.id,
+      target: [requestMock.to.id],
       type: 'reaction',
       value: {
         emoji: '+1',

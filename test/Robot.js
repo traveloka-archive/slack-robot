@@ -197,7 +197,7 @@ describe('Robot', () => {
       robot.bot = { id: 'U123123' };
     }, 500);
 
-    robot.to('@user', callback);
+    robot.to('@user', '#channel', callback);
     callback.callCount.should.be.equal(0);
 
     clock.tick(100);
