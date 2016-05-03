@@ -20,10 +20,14 @@ const apiMock = {
   dm: {
     open: sinon.stub()
   },
+  mpim: {
+    open: sinon.stub()
+  },
   _token: 'xxxx'
 };
 
 const dataStoreMock = {
+  getDMById: sinon.stub(),
   getChannelOrGroupByName: sinon.stub(),
   getUserByName: sinon.stub()
 };
@@ -159,7 +163,7 @@ describe('Response', () => {
 
   it('should add text task as many as targets', () => {
     const res = new Response(token, dataStoreMock, requestMock);
-    res.text('yolo', ['D1234', 'C2345']);
+    res.text('yolo', 'D1234', 'C2345');
 
     res._queue.length().should.be.equal(2);
     res._queue.tasks[0].data.should.deep.equal({
@@ -176,7 +180,7 @@ describe('Response', () => {
 
   it('should add attachment task as many as targets', () => {
     const res = new Response(token, dataStoreMock, requestMock);
-    res.attachment('hello', {}, ['C13552', 'G27924']);
+    res.attachment('hello', {}, 'C13552', 'G27924');
 
     res._queue.length().should.be.equal(2);
     res._queue.tasks[0].data.should.deep.equal({
@@ -199,7 +203,7 @@ describe('Response', () => {
 
   it('should add file task as many as targets', () => {
     const res = new Response(token, dataStoreMock, requestMock);
-    res.upload('snippet.txt', 'snippet', ['C13552', 'G27924']);
+    res.upload('snippet.txt', 'snippet', 'C13552', 'G27924');
 
     res._queue.length().should.be.equal(2);
     res._queue.tasks[0].data.should.deep.equal({
@@ -222,7 +226,7 @@ describe('Response', () => {
 
   it('should filter unknown target', () => {
     const res = new Response(token, dataStoreMock, requestMock);
-    res.upload('snippet.txt', 'snippet', ['C13552', '@unknown']);
+    res.upload('snippet.txt', 'snippet', 'C13552', '@unknown');
 
     res._queue.length().should.be.equal(1);
     res._queue.tasks[0].data.should.deep.equal({
@@ -277,7 +281,7 @@ describe('Response', () => {
     res.text('hello', '@anon');
     res._queue.length().should.be.equal(1);
     res._queue.tasks[0].data.should.deep.equal({
-      target: 'u__U269430',
+      target: 'user__U269430',
       type: 'text',
       value: 'hello'
     });
@@ -331,6 +335,48 @@ describe('Response', () => {
     });
   });
 
+  it('should open mpim first when sending to multi-party direct message', done => {
+    const res = new Response(token, dataStoreMock, requestMock);
+    const mpimOpenApiMock = {
+      ok: true,
+      group: {
+        id: 'G532512'
+      }
+    };
+
+    const spy = sinon.spy(Response.prototype, '_sendResponse');
+
+    res._api = apiMock;
+    dataStoreMock.getUserByName.withArgs('daendels').returns({ id: 'U532122' });
+    dataStoreMock.getDMById.withArgs('D123124').returns({ user: 'U124523' });
+    apiMock.mpim.open.callsArgWith(1, null, mpimOpenApiMock);
+    apiMock.chat.postMessage.callsArgWith(3, null, {});
+
+    res.text('try mpim', [
+      '@daendels',
+      'U41452',
+      '@unknown_user',
+      'D_invalidDM',
+      'C52321',
+      'D123124'
+    ]);
+
+    res.send().then(() => {
+      const fixedTask = {
+        type: 'text',
+        target: mpimOpenApiMock.group.id,
+        value: 'try mpim'
+      };
+
+      spy.calledWith(fixedTask).should.be.equal(true);
+      apiMock.mpim.open.should.be.calledWith('U532122,U41452,U124523');
+    })
+    .finally(() => {
+      spy.restore();
+      done();
+    });
+  });
+
   it('should emit error when failed to open dm (network error)', done => {
     const res = new Response(token, dataStoreMock, requestMock);
     const dmOpenApiMock = new Error('Network error');
@@ -365,6 +411,42 @@ describe('Response', () => {
     });
 
     res.text('try dm', '@daendels').send();
+  });
+
+  it('should emit error when failed to open mpim (network error)', done => {
+    const res = new Response(token, dataStoreMock, requestMock);
+    const dmOpenApiMock = new Error('Network error');
+
+    res._api = apiMock;
+    dataStoreMock.getUserByName.withArgs('daendels').returns({ id: 'U532122' });
+    apiMock.mpim.open.callsArgWith(1, dmOpenApiMock);
+
+    res.on('task_error', err => {
+      err.should.be.equal(dmOpenApiMock);
+      done();
+    });
+
+    res.text('try error mpim', ['@daendels']).send();
+  });
+
+  it('should emit error when failed to open mpim (failed api)', done => {
+    const res = new Response(token, dataStoreMock, requestMock);
+    const errorMessage = 'not_authed';
+    const dmOpenApiMock = {
+      ok: false,
+      error: errorMessage
+    };
+
+    res._api = apiMock;
+    dataStoreMock.getUserByName.withArgs('daendels').returns({ id: 'U532122' });
+    apiMock.mpim.open.callsArgWith(1, null, dmOpenApiMock);
+
+    res.on('task_error', err => {
+      err.message.should.be.equal(errorMessage);
+      done();
+    });
+
+    res.text('try error mpim', ['@daendels']).send();
   });
 
   it('should emit error if failed sending task', done => {

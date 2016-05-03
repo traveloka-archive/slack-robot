@@ -151,6 +151,14 @@ robot.listen('exception', function (req, res) {
   throw new Error('manual trigger');
 });
 
+robot.listen('multiple target', function (req, res) {
+  return res.text('multi', '#channel', '@user').send();
+});
+
+robot.listen('mpim', function (req, res) {
+  return res.text('mpim', ['@user1', '@user2']);
+});
+
 // manually send message
 robot.to('@username', function (res) {
   return res.text('hello').send();

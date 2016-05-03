@@ -11,7 +11,8 @@ import {
   getFileExtension
 } from './util';
 
-const USER_PREFIX = 'u__';
+const USER_PREFIX = 'user__';
+const MPIM_PREFIX = 'mpim__';
 
 const DEFAUT_POST_MESSAGE_OPTS = {
   as_user: true,
@@ -72,7 +73,7 @@ export default class Response extends EventEmitter {
    * @param {=Array.<string>|string} optTargets
    * @return {Response}
    */
-  text(text, optTargets) {
+  text(text, ...optTargets) {
     const targets = this._getTargets(optTargets);
     const base = {
       type: TASK_TYPES.TEXT,
@@ -105,13 +106,13 @@ export default class Response extends EventEmitter {
       text = args[0];
       attachments = args[1];
 
-      if (arguments.length === 3) {
-        optTargets = arguments[2];
+      if (args.length > 2) {
+        optTargets = args.splice(2);
       }
     } else {
       attachments = args[0];
-      if (arguments.length === 2) {
-        optTargets = arguments[1];
+      if (arguments.length > 1) {
+        optTargets = args.splice(1);
       }
     }
 
@@ -143,7 +144,7 @@ export default class Response extends EventEmitter {
    * @param {=Array.<string>|string} optTargets
    * @see https://nodejs.org/api/fs.html
    */
-  upload(filename, content, optTargets) {
+  upload(filename, content, ...optTargets) {
     const targets = this._getTargets(optTargets);
     const base = {
       type: TASK_TYPES.UPLOAD,
@@ -221,6 +222,12 @@ export default class Response extends EventEmitter {
     });
   }
 
+  /**
+   * Add response to queue for all target
+   *
+   * @param {Object} base response object
+   * @param {Array.<string>} targets list of channel
+   */
   _addToQueues(base, targets) {
     targets.forEach(target => {
       const task = { target, ...base };
@@ -256,7 +263,7 @@ export default class Response extends EventEmitter {
     if (task.target.indexOf(USER_PREFIX) > -1) {
       const userId = task.target.replace(USER_PREFIX, '');
 
-      this._api.dm.open(userId, (err, data) => {
+      return this._api.dm.open(userId, (err, data) => {
         if (err) {
           return callback(err);
         }
@@ -268,8 +275,21 @@ export default class Response extends EventEmitter {
         task.target = data.channel.id;
         this._sendResponse(task, callback);
       });
+    } else if (task.target.indexOf(MPIM_PREFIX) > -1) {
+      const userIds = task.target.replace(MPIM_PREFIX, '');
 
-      return;
+      return this._api.mpim.open(userIds, (err, data) => {
+        if (err) {
+          return callback(err);
+        }
+
+        if (!data.ok) {
+          return callback(new Error(data.error));
+        }
+
+        task.target = data.group.id;
+        this._sendResponse(task, callback);
+      });
     }
 
     this._sendResponse(task, callback);
@@ -303,12 +323,12 @@ export default class Response extends EventEmitter {
 
   /**
    * @private
-   * @param {string} target channel id
+   * @param {string} id channel id
    * @param {string} text
    * @param {function} callback
    */
-  _sendTextResponse(target, text, callback) {
-    this._api.chat.postMessage(target, text, DEFAUT_POST_MESSAGE_OPTS, (err, res) => {
+  _sendTextResponse(id, text, callback) {
+    this._api.chat.postMessage(id, text, DEFAUT_POST_MESSAGE_OPTS, (err, res) => {
       if (err) {
         return callback(err);
       }
@@ -319,18 +339,18 @@ export default class Response extends EventEmitter {
 
   /**
    * @private
-   * @param {string} target channel id
+   * @param {string} id channel id
    * @param {object} attachment
    * @param {function} callback
    */
-  _sendAttachmentResponse(target, attachment, callback) {
+  _sendAttachmentResponse(id, attachment, callback) {
     const { text, attachments } = attachment;
     const opts = {
       ...DEFAUT_POST_MESSAGE_OPTS,
       attachments: JSON.stringify(attachments)
     };
 
-    this._api.chat.postMessage(target, text, opts, (err, res) => {
+    this._api.chat.postMessage(id, text, opts, (err, res) => {
       if (err) {
         return callback(err);
       }
@@ -365,11 +385,11 @@ export default class Response extends EventEmitter {
    * TODO use WebClient when this is fixed
    *
    * @private
-   * @param {string} target channel id
+   * @param {string} id channel id
    * @param {object} file
    * @param {function} callback
    */
-  _sendFileResponse(target, file, callback) {
+  _sendFileResponse(id, file, callback) {
     const url = 'https://slack.com/api/files.upload';
 
     const r = request.post(url, (err, res, body) => {
@@ -389,7 +409,7 @@ export default class Response extends EventEmitter {
     const form = r.form();
 
     form.append('token', this._api._token);
-    form.append('channels', target);
+    form.append('channels', id);
     form.append('filename', file.filename);
     form.append('filetype', getFileExtension(file.filename));
 
@@ -410,28 +430,20 @@ export default class Response extends EventEmitter {
    * Check whether use supplied target or default target
    *
    * @private
-   * @param {=string|Array.<string>} optTargets
+   * @param {=Array.<string>} targets
    * @return {Array.<string>}
    */
   _getTargets(optTargets) {
-    let targets;
-
-    if (optTargets) {
-      targets = optTargets;
-
-      if (typeof optTargets === 'string') {
-        targets = [optTargets];
-      }
-    } else {
-      targets = [this._defaultTarget];
-    }
+    const targets = optTargets && optTargets.length > 0 ? optTargets : [this._defaultTarget];
+    const idFormat = ['C', 'G', 'D'];
 
     return targets.map(target => {
-      const idFormat = ['C', 'G', 'D'];
-      const firstChar = target.substring(0, 1);
+      if (Array.isArray(target)) {
+        return this._getMpimTarget(target);
+      }
 
       // skip mapping if already an id
-      if (idFormat.indexOf(firstChar) > -1) {
+      if (idFormat.indexOf(target.substring(0, 1)) > -1) {
         return target;
       }
 
@@ -441,8 +453,7 @@ export default class Response extends EventEmitter {
         // not a channel or group, use user id
         // prefix with u__ to mark that we need to "open im" first
         // before we can send message
-        const username = target.replace('@', '');
-        const user = this._dataStore.getUserByName(username);
+        const user = this._dataStore.getUserByName(target.replace('@', ''));
 
         if (!user) {
           return null;
@@ -453,5 +464,52 @@ export default class Response extends EventEmitter {
 
       return channel.id;
     }).filter(target => target !== null);
+  }
+
+  /**
+   * MPIM target is marked by specifying array of target,
+   * we need to get list of user id (if not already),
+   * and exclude invalid target (channel, group, etc)
+   *
+   * @param {Array.<string>} users
+   * @return {string}
+   */
+  _getMpimTarget(users) {
+    const userIds = users.map(t => {
+      const mark = t.substring(0, 1);
+      switch (mark) {
+        // direct message, we need to get the user id
+        case 'D': {
+          const dm = this._dataStore.getDMById(t);
+
+          if (!dm) {
+            return null;
+          }
+
+          return dm.user;
+        }
+
+        case 'U':
+          return t;
+
+        // invalid input
+        case 'C':
+        case 'G':
+          return null;
+
+        // treat other target as user name
+        default: {
+          const user = this._dataStore.getUserByName(t.replace('@', ''));
+
+          if (!user) {
+            return null;
+          }
+
+          return user.id;
+        }
+      }
+    }).filter(user => user !== null);
+
+    return MPIM_PREFIX + userIds.join(',');
   }
 }
