@@ -70,6 +70,21 @@ describe('Response', () => {
     mapStub.restore();
   });
 
+  it('should allow pending user/mpim when sending using setDefaultTarget', () => {
+    const res = new Response(token, dataStoreMock, requestMock, 5);
+    const targets = ['@someone'];
+    dataStoreMock.getUserByName.withArgs('someone').returns({ id: 'U532122' });
+    res.setDefaultTarget(targets);
+    res.text('yo');
+
+    res._queue.tasks[0].data.should.deep.equal({
+      target: 'user__U532122',
+      type: 'text',
+      value: 'yo'
+    });
+  });
+
+
   it('should queue text task without running it', () => {
     const res = new Response(token, dataStoreMock, requestMock, 5);
     res.text('yolo');

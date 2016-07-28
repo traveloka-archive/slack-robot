@@ -459,6 +459,11 @@ export default class Response extends EventEmitter {
         return this._getMpimTarget(target);
       }
 
+      // skip mapping if already a pending id
+      if (target.indexOf(USER_PREFIX) === 0 || target.indexOf(MPIM_PREFIX) === 0) {
+        return target;
+      }
+
       // skip mapping if already an id
       if (idFormat.indexOf(target.substring(0, 1)) > -1) {
         return target;
