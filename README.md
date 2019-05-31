@@ -1,5 +1,8 @@
-# slack-robot [![Build Status](https://travis-ci.org/vkonst/slack-robot.svg)](https://travis-ci.org/vkonst/slack-robot) [![codecov.io](https://codecov.io/github/vkonst/slack-robot/coverage.svg?branch=master)](https://codecov.io/github/vkonst/slack-robot?branch=master) [![Package Version](http://img.shields.io/npm/v/slack-robot.svg)](https://www.npmjs.com/package/slack-robot)
+# @vkonst/slack-robot
+[![Build Status](https://travis-ci.org/vkonst/slack-robot.svg)](https://travis-ci.org/vkonst/slack-robot) [![codecov.io](https://codecov.io/github/vkonst/slack-robot/coverage.svg?branch=master)](https://codecov.io/github/vkonst/slack-robot?branch=master) [![Package Version](https://img.shields.io/npm/v/@vkonst/slack-robot.svg)](https://www.npmjs.com/package/@vkonst/slack-robot)
 > Simple robot for your slack integration
+
+> _fork from traveloka/slack-robot with updated packages and minor fixes_
 
 `slack-robot` initially built to respond message from user with an action, then replying
 with a response. While hubot will do the job, it's too generic (no slack specific response like reaction, snippet, attachment, or listening to slack specific event). Using hubot also mean learning hubot specific command, using the right adapter, using the right slack-client, and patching them with slack specific event
