@@ -1,3 +1,4 @@
+/* eslint no-use-before-define: 0 */
 export default class Request {
   constructor(msg, listener) {
     const message = {
@@ -5,29 +6,28 @@ export default class Request {
       value: msg.value,
       timestamp: msg.timestamp
     };
-    const from = msg.from;
-    const to = msg.to;
+    const { from, to }= msg;
     let params = {};
     let matches = [];
 
     if (msg.to) {
       switch (to.id.charAt(0).toLowerCase()) {
-        case 'c':
-          to.type = 'channel';
+        case "c":
+          to.type = "channel";
           break;
-        case 'g':
-          to.type = 'group';
+        case "g":
+          to.type = "group";
           break;
-        case 'd':
-          to.type = 'dm';
+        case "d":
+          to.type = "dm";
           break;
         /* istanbul ignore next: */
         default:
-          to.type = 'channel';
+          to.type = "channel";
       }
     }
 
-    if (message.type === 'message') {
+    if (message.type === "message") {
       params = getParams(message.value.text, listener.value, listener.matcher);
 
       // do not fill matches when params exist
@@ -43,13 +43,13 @@ export default class Request {
     this.matches = matches;
     this.listener = listener;
 
-    Object.defineProperty(this, 'user', {
+    Object.defineProperty(this, "user", {
       enumerable: false,
       writable: false,
       value: this.from
     });
 
-    Object.defineProperty(this, 'channel', {
+    Object.defineProperty(this, "channel", {
       enumerable: false,
       writable: false,
       value: this.to
@@ -79,11 +79,11 @@ function getParams(text, value, matcher) {
 
   // remove leading ":" in named regex
   payloadList = payloadList.map(v => {
-    return v.replace(/^:/, '');
+    return v.replace(/^:/, "");
   });
 
-  for (let i = 0; i < payloadList.length; i++) {
-    const regexIndex = `$${(i + 1)}`;
+  for (let i = 0; i < payloadList.length; i += 1) {
+    const regexIndex = `$${i + 1}`;
     const payloadName = payloadList[i];
     payload[payloadName] = text.replace(matcher, regexIndex);
   }

@@ -1,20 +1,24 @@
-import Log from 'log';
-import EventEmitter from 'eventemitter3';
-import Promise from 'bluebird';
-import { RtmClient, WebClient, CLIENT_EVENTS, RTM_EVENTS as MESSAGE_TYPE } from 'slack-client';
-import { MemoryDataStore } from 'slack-client/lib/data-store';
-import Listeners from './Listeners';
-import Message from './Message';
-import Request from './Request';
-import Response from './Response';
-import plugins from './plugins';
-import acls from './acls';
+/* eslint no-underscore-dangle: 0 */
+/* eslint consistent-return: 0 */
+import Log from "log";
 import {
-  ROBOT_EVENTS,
-  RESPONSE_EVENTS
-} from './Events';
+  RtmClient,
+  WebClient,
+  CLIENT_EVENTS,
+  RTM_EVENTS as MESSAGE_TYPE
+} from "slack-client";
+import { MemoryDataStore } from "slack-client/lib/data-store";
+import Listeners from "./Listeners";
+import Message from "./Message";
+import Request from "./Request";
+import Response from "./Response";
+import plugins from "./plugins";
+import acls from "./acls";
+import { ROBOT_EVENTS, RESPONSE_EVENTS } from "./Events";
 
-const logger = new Log('info');
+const EventEmitter = require("events");
+
+const logger = Log; // 'info' level by default
 const CLIENT_RTM_EVENTS = CLIENT_EVENTS.RTM;
 
 const DEFAULT_OPTIONS = {
@@ -24,7 +28,7 @@ const DEFAULT_OPTIONS = {
 export default class Robot extends EventEmitter {
   constructor(token, options = DEFAULT_OPTIONS) {
     if (!token) {
-      throw new Error('Invalid slack access token');
+      throw new Error("Invalid slack access token");
     }
 
     super();
@@ -123,7 +127,7 @@ export default class Robot extends EventEmitter {
    * @returns {Listener}
    */
   listen(message, callback) {
-    return this.when('message', message, callback);
+    return this.when("message", message, callback);
   }
 
   /**
@@ -134,16 +138,19 @@ export default class Robot extends EventEmitter {
    * @param {function} callback
    */
   when(type, value, callback) {
-    if (!type || typeof type !== 'string') {
-      throw new TypeError('Invalid listener type');
+    if (!type || typeof type !== "string") {
+      throw new TypeError("Invalid listener type");
     }
 
-    if (!value || (typeof value !== 'string' && value instanceof RegExp === false)) {
-      throw new TypeError('Invalid message to listen');
+    if (
+      !value ||
+      (typeof value !== "string" && value instanceof RegExp === false)
+    ) {
+      throw new TypeError("Invalid message to listen");
     }
 
-    if (!callback || typeof callback !== 'function') {
-      throw new TypeError('Callback must be a function');
+    if (!callback || typeof callback !== "function") {
+      throw new TypeError("Callback must be a function");
     }
 
     const listener = this._listeners.add(type, value, callback);
@@ -176,8 +183,8 @@ export default class Robot extends EventEmitter {
    * @param {function} plugin
    */
   use(plugin) {
-    if (typeof plugin !== 'function') {
-      throw new Error('Invalid plugin type');
+    if (typeof plugin !== "function") {
+      throw new Error("Invalid plugin type");
     }
 
     if (this._plugins.indexOf(plugin) === -1) {
@@ -196,7 +203,7 @@ export default class Robot extends EventEmitter {
   set(property, value) {
     if (value !== null && value !== undefined) {
       // special property
-      if (property === 'help_generator') {
+      if (property === "help_generator") {
         this.use(plugins.helpGenerator({ enable: Boolean(value) }));
       }
 
@@ -240,14 +247,21 @@ export default class Robot extends EventEmitter {
     // in response object so user can just run res.text without having
     // to think about target id anymore
     const req = { to: { id: target[0] }, message: {} };
-    const res = new Response(this._token, this._rtm.dataStore, req, this._vars.concurrency);
+    const res = new Response(
+      this._token,
+      this._rtm.dataStore,
+      req,
+      this._vars.concurrency
+    );
     res.setDefaultTarget(target);
 
-    ['reaction', 'async'].forEach(invalidMethod => {
+    ["reaction", "async"].forEach(invalidMethod => {
       Object.defineProperty(res, invalidMethod, {
         get() {
           return function invalid() {
-            throw new Error(`Cannot use method .${invalidMethod}() in robot.to()`);
+            throw new Error(
+              `Cannot use method .${invalidMethod}() in robot.to()`
+            );
           };
         }
       });
@@ -299,7 +313,7 @@ export default class Robot extends EventEmitter {
     });
 
     this._rtm.on(MESSAGE_TYPE.MESSAGE, message => {
-      if (message.subtype === 'message_changed') {
+      if (message.subtype === "message_changed") {
         /**
          * This is a follow up from reaction_added event added to file object
          * contain current message object and previous message object.
@@ -331,16 +345,19 @@ export default class Robot extends EventEmitter {
        * We need to validate the message first whether it is written by ourself
        * (bot), or someone else. If it's not bot's own message, skip that shit
        */
-      this._api.reactions.get({
-        channel: message.item.channel,
-        timestamp: message.item.ts
-      }, (err, res) => {
-        if (err || !res.ok || res.message.user !== this.bot.id) {
-          return;
-        }
+      this._api.reactions.get(
+        {
+          channel: message.item.channel,
+          timestamp: message.item.ts
+        },
+        (err, res) => {
+          if (err || !res.ok || res.message.user !== this.bot.id) {
+            return;
+          }
 
-        this._onMessage(message);
-      });
+          this._onMessage(message);
+        }
+      );
     });
 
     this._rtm.start();
@@ -372,8 +389,11 @@ export default class Robot extends EventEmitter {
       return;
     }
 
-    for (let i = 0; i < this._ignoredChannels.length; i++) {
-      if (message.to.name && this._ignoredChannels[i].indexOf(message.to.name) > -1) {
+    for (let i = 0; i < this._ignoredChannels.length; i += 1) {
+      if (
+        message.to.name &&
+        this._ignoredChannels[i].indexOf(message.to.name) > -1
+      ) {
         this.emit(ROBOT_EVENTS.IGNORED_CHANNEL, message);
         return;
       }
@@ -387,14 +407,22 @@ export default class Robot extends EventEmitter {
     }
 
     const request = new Request(message, listener);
-    const response = new Response(this._token, this._rtm.dataStore, request, this._vars.concurrency);
-    response.on(RESPONSE_EVENTS.TASK_ERROR, err => this.emit(ROBOT_EVENTS.RESPONSE_FAILED, err));
+    const response = new Response(
+      this._token,
+      this._rtm.dataStore,
+      request,
+      this._vars.concurrency
+    );
+    response.on(RESPONSE_EVENTS.TASK_ERROR, err =>
+      this.emit(ROBOT_EVENTS.RESPONSE_FAILED, err)
+    );
 
     this._checkListenerAcl(listener.acls, request, response, () => {
       this._handleRequest(request, response, listener.callback);
     });
   }
 
+  // eslint-disable-next-line no-shadow
   _checkListenerAcl(acls, request, response, callback) {
     const acl = acls[0];
 
@@ -421,8 +449,8 @@ export default class Robot extends EventEmitter {
     new Promise(resolve => {
       return resolve(callback(request, response));
     })
-    .then(() => this.emit(ROBOT_EVENTS.REQUEST_HANDLED, request))
-    .catch(err => this.emit(ROBOT_EVENTS.ERROR, err));
+      .then(() => this.emit(ROBOT_EVENTS.REQUEST_HANDLED, request))
+      .catch(err => this.emit(ROBOT_EVENTS.ERROR, err));
   }
 
   /**
@@ -452,10 +480,11 @@ export default class Robot extends EventEmitter {
    * @param {Object} message
    * @return {MessageQueue}
    */
+  // eslint-disable-next-line class-methods-use-this
   _getQueueEntry(message) {
     switch (message.type) {
       case MESSAGE_TYPE.REACTION_ADDED:
-        if (message.item.type === 'file') {
+        if (message.item.type === "file") {
           return {
             id: message.item.file,
             user: message.user,
@@ -485,7 +514,7 @@ export default class Robot extends EventEmitter {
    * @param {Object} message
    */
   _processQueuedMessage(message) {
-    for (let i = 0; i < this._messageQueue.length; i++) {
+    for (let i = 0; i < this._messageQueue.length; i += 1) {
       const entry = this._messageQueue[i];
 
       // Else statement doesn't do anything anyway so it's not
@@ -497,7 +526,7 @@ export default class Robot extends EventEmitter {
           user: entry.user,
           reaction: entry.reaction,
           item: {
-            type: 'message',
+            type: "message",
             channel: message.channel,
             ts: message.message.ts
           },
@@ -521,7 +550,11 @@ export default class Robot extends EventEmitter {
    */
   _isReactionAddEvent(queue, message) {
     /* istanbul ignore else */
-    if (message.message.user === this.bot.id && message.message.file && message.message.file.id === queue.id) {
+    if (
+      message.message.user === this.bot.id &&
+      message.message.file &&
+      message.message.file.id === queue.id
+    ) {
       return true;
     }
 

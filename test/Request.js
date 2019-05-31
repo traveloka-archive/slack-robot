@@ -1,45 +1,45 @@
-import chai from 'chai';
-import { describe, it } from 'mocha';
-import Request from '../src/Request';
+import chai from "chai";
+import { describe, it } from "mocha";
+import Request from "../src/Request";
 
 chai.should();
 
-describe('Request', () => {
-  it('should parse Message and Listener into request', () => {
+describe("Request", () => {
+  it("should parse Message and Listener into request", () => {
     const msg = {
-      type: 'message',
+      type: "message",
       value: {
-        text: 'something',
+        text: "something",
         mentioned: false
       },
       from: {
-        id: 'D12321',
-        name: 'anonymous'
+        id: "D12321",
+        name: "anonymous"
       },
       to: {
-        id: 'C21234',
-        name: 'public-channel'
+        id: "C21234",
+        name: "public-channel"
       },
-      timestamp: '1324873.03284'
+      timestamp: "1324873.03284"
     };
     const listener = {
-      value: 'something',
+      value: "something",
       matcher: /^something$/
     };
 
     const channel = {
-      id: 'C21234',
-      name: 'public-channel',
-      type: 'channel'
+      id: "C21234",
+      name: "public-channel",
+      type: "channel"
     };
 
     const messageReq = {
-      type: 'message',
+      type: "message",
       value: {
-        text: 'something',
+        text: "something",
         mentioned: false
       },
-      timestamp: '1324873.03284'
+      timestamp: "1324873.03284"
     };
 
     const req = new Request(msg, listener);
@@ -51,31 +51,31 @@ describe('Request', () => {
     req.listener.should.be.deep.equal(listener);
   });
 
-  it('should have hidden channel and user object', () => {
+  it("should have hidden channel and user object", () => {
     const msg = {
-      type: 'message',
+      type: "message",
       value: {
-        text: 'something',
+        text: "something",
         mentioned: false
       },
       from: {
-        id: 'D12321',
-        name: 'anonymous'
+        id: "D12321",
+        name: "anonymous"
       },
       to: {
-        id: 'G21234',
-        name: 'private-group'
+        id: "G21234",
+        name: "private-group"
       },
-      timestamp: '1324873.03284'
+      timestamp: "1324873.03284"
     };
     const listener = {
-      value: 'something',
+      value: "something",
       matcher: /^something$/
     };
     const channel = {
-      id: 'G21234',
-      name: 'private-group',
-      type: 'group'
+      id: "G21234",
+      name: "private-group",
+      type: "group"
     };
 
     const req = new Request(msg, listener);
@@ -83,51 +83,51 @@ describe('Request', () => {
     req.channel.should.be.deep.equal(channel);
   });
 
-  it('should have add channel type for dm message', () => {
+  it("should have add channel type for dm message", () => {
     const msg = {
-      type: 'message',
+      type: "message",
       value: {
-        text: 'something',
+        text: "something",
         mentioned: false
       },
       from: {
-        id: 'D12321',
-        name: 'anonymous'
+        id: "D12321",
+        name: "anonymous"
       },
       to: {
-        id: 'D21234',
-        name: 'slackbot'
+        id: "D21234",
+        name: "slackbot"
       },
-      timestamp: '1324873.03284'
+      timestamp: "1324873.03284"
     };
     const listener = {
-      value: 'something',
+      value: "something",
       matcher: /^something$/
     };
     const channel = {
-      id: 'D21234',
-      name: 'slackbot',
-      type: 'dm'
+      id: "D21234",
+      name: "slackbot",
+      type: "dm"
     };
 
     const req = new Request(msg, listener);
     req.channel.should.be.deep.equal(channel);
   });
 
-  it('should get named-params', () => {
+  it("should get named-params", () => {
     const msg = {
-      type: 'message',
+      type: "message",
       value: {
-        text: 'something you need',
+        text: "something you need",
         mentioned: false
       }
     };
     const listener = {
-      value: 'something :target([a-z]+) need',
+      value: "something :target([a-z]+) need",
       matcher: /^something ([a-z]+) need$/
     };
     const params = {
-      target: 'you'
+      target: "you"
     };
     const matches = [];
 
@@ -136,11 +136,11 @@ describe('Request', () => {
     req.matches.should.be.deep.equal(matches);
   });
 
-  it('should get array of matches', () => {
+  it("should get array of matches", () => {
     const msg = {
-      type: 'message',
+      type: "message",
       value: {
-        text: 'something you need',
+        text: "something you need",
         mentioned: false
       }
     };
@@ -149,18 +149,18 @@ describe('Request', () => {
       matcher: /something ([a-z]+) need/
     };
     const params = {};
-    const matches = ['you'];
+    const matches = ["you"];
 
     const req = new Request(msg, listener);
     req.params.should.be.deep.equal(params);
     req.matches.should.be.deep.equal(matches);
   });
 
-  it('should not parse params and matches execpt in message', () => {
+  it("should not parse params and matches execpt in message", () => {
     const msg = {
-      type: 'reaction_added',
+      type: "reaction_added",
       value: {
-        emoji: '+1'
+        emoji: "+1"
       }
     };
     const listener = {

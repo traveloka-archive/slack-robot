@@ -1,4 +1,4 @@
-import dynamicMention from './dynamic-mention';
+import dynamicMention from "./dynamic-mention";
 
 export default {
   dynamicMention

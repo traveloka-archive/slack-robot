@@ -1,5 +1,6 @@
+/* eslint consistent-return: 0 */
 export default function dynamicMentionAcl(req, res, next) {
-  if (req.channel.type === 'dm') {
+  if (req.channel.type === "dm") {
     // no need to mention in direct message
     return next();
   }

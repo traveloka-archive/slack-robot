@@ -1,5 +1,5 @@
-import { RTM_EVENTS as MESSAGE_TYPE } from 'slack-client';
-import { stripEmoji } from './util';
+import { RTM_EVENTS as MESSAGE_TYPE } from "slack-client";
+import { stripEmoji } from "./util";
 
 /**
  * @public
@@ -10,7 +10,7 @@ import { stripEmoji } from './util';
  */
 export default class Message {
   constructor(bot, dataStore, messageObject) {
-    const type = messageObject.type;
+    const { type } = messageObject;
     const from = dataStore.getUserById(messageObject.user);
 
     let to;
@@ -21,6 +21,7 @@ export default class Message {
     switch (type) {
       case MESSAGE_TYPE.MESSAGE:
         channelId = messageObject.channel;
+        // eslint-disable-next-line no-use-before-define
         value = parseTextMessage(dataStore, bot, messageObject.text);
         timestamp = messageObject.ts;
         break;
@@ -56,54 +57,63 @@ export default class Message {
 function parseTextMessage(dataStore, bot, textMessage) {
   let mentioned = false;
 
-  if (!textMessage) {
-    textMessage = '';
-  }
+  let text = (textMessage || "").replace(
+    /<([@#!])?([^>|]+)(?:\|([^>]+))?>/g,
+    (m, type, link, label) => {
+      switch (type) {
+        case "@": {
+          if (label) {
+            return `@${label}`;
+          }
 
-  let text = textMessage.replace(/<([@#!])?([^>|]+)(?:\|([^>]+))?>/g, (m, type, link, label) => {
-    switch (type) {
-      case '@': {
-        if (label) {
-          return `@${label}`;
+          const user = dataStore.getUserById(link);
+          if (user) {
+            return `@${user.name}`;
+          }
         }
+        /* eslint no-fallthrough: 0 */
+        case "#": {
+          if (label) {
+            return `#${label}`;
+          }
 
-        const user = dataStore.getUserById(link);
-        if (user) {
-          return `@${user.name}`;
+          const channel = dataStore.getChannelById(link);
+          if (channel) {
+            return `#${channel.name}`;
+          }
         }
+        case "!":
+          if (["channel", "group", "everyone"].indexOf(link) !== -1) {
+            return `@${link}`;
+          }
+
+        default:
+          // eslint-disable-next-line no-param-reassign
+          link = link.replace("/^mailto:/", "");
+          if (label && link.indexOf(label) === -1) {
+            return `${label}(${link})`;
+          }
+          return link.replace(/https?:\/\//, "");
       }
-      case '#': {
-        if (label) {
-          return `#${label}`;
-        }
-
-        const channel = dataStore.getChannelById(link);
-        if (channel) {
-          return `#${channel.name}`;
-        }
-      }
-      case '!':
-        if (['channel', 'group', 'everyone'].indexOf(link) !== -1) {
-          return `@${link}`;
-        }
-
-      default:
-        link = link.replace('/^mailto:/', '');
-        if ((label) && (link.indexOf(label) === -1)) {
-          return `${label}(${link})`;
-        }
-        return link.replace(/https?:\/\//, '');
     }
-  });
-  text = text.split(' ').filter(x => x !== '').join(' ');
-  text = text.replace(/&lt;/g, '<');
-  text = text.replace(/&gt;/g, '>');
-  text = text.replace(/&amp;/g, '&');
+    /* eslint no-fallthrough: 1 */
+  );
+  text = text
+    .split(" ")
+    .filter(x => x !== "")
+    .join(" ");
+  text = text.replace(/&lt;/g, "<");
+  text = text.replace(/&gt;/g, ">");
+  text = text.replace(/&amp;/g, "&");
 
   const botMatcher = new RegExp(`@?${bot.name}:?`);
   if (text.match(botMatcher)) {
     mentioned = true;
-    text = text.split(botMatcher).map(x => x.trim()).join(' ').trim();
+    text = text
+      .split(botMatcher)
+      .map(x => x.trim())
+      .join(" ")
+      .trim();
   }
 
   return {

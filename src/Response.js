@@ -1,38 +1,34 @@
-import { bind } from 'lodash';
-import async from 'async';
-import fs from 'fs';
-import request from 'request';
-import Promise from 'bluebird';
-import EventEmitter from 'eventemitter3';
-import { WebClient } from 'slack-client';
-import {
-  RESPONSE_EVENTS
-} from './Events';
+/* eslint no-underscore-dangle: 0 */
+/* eslint consistent-return: 0 */
+import async from "async";
+import fs from "fs";
+import requestjs from "request";
+import { WebClient } from "slack-client";
+import { RESPONSE_EVENTS } from "./Events";
 
-import {
-  stripEmoji,
-  getFileExtension
-} from './util';
+import { stripEmoji, getFileExtension } from "./util";
 
-const USER_PREFIX = 'user__';
-const MPIM_PREFIX = 'mpim__';
+const EventEmitter = require("events");
+
+const USER_PREFIX = "user__";
+const MPIM_PREFIX = "mpim__";
 
 const DEFAUT_POST_MESSAGE_OPTS = {
   as_user: true,
-  parse: 'full'
+  parse: "full"
 };
 
 const TASK_TYPES = {
-  TEXT: 'text',
-  ATTACHMENT: 'attachments',
-  UPLOAD: 'file',
-  REACTION: 'reaction'
+  TEXT: "text",
+  ATTACHMENT: "attachments",
+  UPLOAD: "file",
+  REACTION: "reaction"
 };
 
 export default class Response extends EventEmitter {
   /**
    * @constructor
-   * @param {WebClient} api
+   * @param {string} slackToken
    * @param {SlackDataStore} dataStore
    * @param {Request} request
    * @param {number} concurrency (defaults to 1 to allow serial response sending)
@@ -44,15 +40,15 @@ export default class Response extends EventEmitter {
     this._defaultTarget = [request.to.id];
     this._messageTimestamp = request.message.timestamp;
 
-    concurrency = parseInt(concurrency, 10);
-
     /**
      * We use new instance of WebClient instead of passing from robot
      * to allow different concurrency option
      *
      * @type {WebClient}
      */
-    this._api = new WebClient(slackToken, { maxRequestConcurrency: concurrency });
+    this._api = new WebClient(slackToken, {
+      maxRequestConcurrency: parseInt(concurrency, 10)
+    });
 
     /**
      * This is where we queue our response before actually sending them
@@ -62,10 +58,7 @@ export default class Response extends EventEmitter {
      *
      * @type {AsyncQueue}
      */
-    this._queue = async.queue(
-      bind(this._send, this),
-      concurrency
-    );
+    this._queue = async.queue(this._send.bind(this), concurrency);
   }
 
   /**
@@ -116,17 +109,18 @@ export default class Response extends EventEmitter {
    * @param {=Array.<string>|string} optTargets
    */
   attachment(...args) {
-    let text, attachments, optTargets;
+    let text;
+    let attachments;
+    let optTargets;
 
-    if (typeof args[0] === 'string') {
-      text = args[0];
-      attachments = args[1];
+    if (typeof args[0] === "string") {
+      [text, attachments] = args;
 
       if (args.length > 2) {
         optTargets = args.splice(2);
       }
     } else {
-      attachments = args[0];
+      [attachments] = args;
       if (arguments.length > 1) {
         optTargets = args.splice(1);
       }
@@ -229,12 +223,13 @@ export default class Response extends EventEmitter {
    *
    */
   send() {
-    this._queue.resume();
+    const queue = this._queue;
+    queue.resume();
 
     return new Promise(resolve => {
-      this._queue.drain = function () {
-        return resolve();
-      };
+      queue.drain(() => {
+        resolve();
+      });
     });
   }
 
@@ -245,9 +240,10 @@ export default class Response extends EventEmitter {
    * @param {Array.<string>} targets list of channel
    */
   _addToQueues(base, targets) {
+    const self = this;
     targets.forEach(target => {
       const task = { target, ...base };
-      this._addToQueue(task);
+      self._addToQueue(task);
     });
   }
 
@@ -277,7 +273,7 @@ export default class Response extends EventEmitter {
    */
   _send(task, callback) {
     if (task.target.indexOf(USER_PREFIX) > -1) {
-      const userId = task.target.replace(USER_PREFIX, '');
+      const userId = task.target.replace(USER_PREFIX, "");
 
       return this._api.dm.open(userId, (err, data) => {
         if (err) {
@@ -288,11 +284,14 @@ export default class Response extends EventEmitter {
           return callback(new Error(data.error));
         }
 
+        // eslint-disable-next-line no-param-reassign
         task.target = data.channel.id;
         this._sendResponse(task, callback);
       });
-    } else if (task.target.indexOf(MPIM_PREFIX) > -1) {
-      const userIds = task.target.replace(MPIM_PREFIX, '');
+    }
+
+    if (task.target.indexOf(MPIM_PREFIX) > -1) {
+      const userIds = task.target.replace(MPIM_PREFIX, "");
 
       return this._api.mpim.open(userIds, (err, data) => {
         if (err) {
@@ -303,6 +302,7 @@ export default class Response extends EventEmitter {
           return callback(new Error(data.error));
         }
 
+        // eslint-disable-next-line no-param-reassign
         task.target = data.group.id;
         this._sendResponse(task, callback);
       });
@@ -344,13 +344,18 @@ export default class Response extends EventEmitter {
    * @param {function} callback
    */
   _sendTextResponse(id, text, callback) {
-    this._api.chat.postMessage(id, text, DEFAUT_POST_MESSAGE_OPTS, (err, res) => {
-      if (err) {
-        return callback(err);
-      }
+    this._api.chat.postMessage(
+      id,
+      text,
+      DEFAUT_POST_MESSAGE_OPTS,
+      (err, res) => {
+        if (err) {
+          return callback(err);
+        }
 
-      callback(null, res);
-    });
+        callback(null, res);
+      }
+    );
   }
 
   /**
@@ -406,14 +411,14 @@ export default class Response extends EventEmitter {
    * @param {function} callback
    */
   _sendFileResponse(id, file, callback) {
-    const url = 'https://slack.com/api/files.upload';
+    const url = "https://slack.com/api/files.upload";
 
-    const r = request.post(url, (err, res, body) => {
+    const r = requestjs.post(url, (err, res, body) => {
       if (err) {
         return callback(err);
       }
 
-      const data = JSON.parse(body);
+      const data = JSON.parse(body || "{}");
 
       if (!data.ok) {
         return callback(new Error(data.error));
@@ -424,10 +429,10 @@ export default class Response extends EventEmitter {
 
     const form = r.form();
 
-    form.append('token', this._api._token);
-    form.append('channels', id);
-    form.append('filename', file.filename);
-    form.append('filetype', getFileExtension(file.filename));
+    form.append("token", this._api._token);
+    form.append("channels", id);
+    form.append("filename", file.filename);
+    form.append("filetype", getFileExtension(file.filename));
 
     /**
      * Slack API expect one of two fields, file or content.
@@ -436,9 +441,9 @@ export default class Response extends EventEmitter {
      * @see https://api.slack.com/methods/files.upload
      */
     if (file.content instanceof fs.ReadStream) {
-      form.append('file', file.content);
+      form.append("file", file.content);
     } else {
-      form.append('content', file.content);
+      form.append("content", file.content);
     }
   }
 
@@ -447,45 +452,51 @@ export default class Response extends EventEmitter {
    * If no target is specified, use defaultTarget
    *
    * @private
-   * @param {=Array.<string>} targets
+   * @param {=Array.<string>} optTargets
    * @return {Array.<string>}
    */
   _mapTargetToId(optTargets) {
-    const targets = optTargets && optTargets.length > 0 ? optTargets : this._defaultTarget;
-    const idFormat = ['C', 'G', 'D'];
+    const targets =
+      optTargets && optTargets.length > 0 ? optTargets : this._defaultTarget;
+    const idFormat = ["C", "G", "D"];
 
-    return targets.map(target => {
-      if (Array.isArray(target)) {
-        return this._getMpimTarget(target);
-      }
-
-      // skip mapping if already a pending id
-      if (target.indexOf(USER_PREFIX) === 0 || target.indexOf(MPIM_PREFIX) === 0) {
-        return target;
-      }
-
-      // skip mapping if already an id
-      if (idFormat.indexOf(target.substring(0, 1)) > -1) {
-        return target;
-      }
-
-      const channel = this._dataStore.getChannelOrGroupByName(target);
-
-      if (!channel) {
-        // not a channel or group, use user id
-        // prefix with u__ to mark that we need to "open im" first
-        // before we can send message
-        const user = this._dataStore.getUserByName(target.replace('@', ''));
-
-        if (!user) {
-          return null;
+    return targets
+      .map(target => {
+        if (Array.isArray(target)) {
+          return this._getMpimTarget(target);
         }
 
-        return USER_PREFIX + user.id;
-      }
+        // skip mapping if already a pending id
+        if (
+          target.indexOf(USER_PREFIX) === 0 ||
+          target.indexOf(MPIM_PREFIX) === 0
+        ) {
+          return target;
+        }
 
-      return channel.id;
-    }).filter(target => target !== null);
+        // skip mapping if already an id
+        if (idFormat.indexOf(target.substring(0, 1)) > -1) {
+          return target;
+        }
+
+        const channel = this._dataStore.getChannelOrGroupByName(target);
+
+        if (!channel) {
+          // not a channel or group, use user id
+          // prefix with u__ to mark that we need to "open im" first
+          // before we can send message
+          const user = this._dataStore.getUserByName(target.replace("@", ""));
+
+          if (!user) {
+            return null;
+          }
+
+          return USER_PREFIX + user.id;
+        }
+
+        return channel.id;
+      })
+      .filter(target => target !== null);
   }
 
   /**
@@ -497,41 +508,43 @@ export default class Response extends EventEmitter {
    * @return {string}
    */
   _getMpimTarget(users) {
-    const userIds = users.map(t => {
-      const mark = t.substring(0, 1);
-      switch (mark) {
-        // direct message, we need to get the user id
-        case 'D': {
-          const dm = this._dataStore.getDMById(t);
+    const userIds = users
+      .map(t => {
+        const mark = t.substring(0, 1);
+        switch (mark) {
+          // direct message, we need to get the user id
+          case "D": {
+            const dm = this._dataStore.getDMById(t);
 
-          if (!dm) {
-            return null;
+            if (!dm) {
+              return null;
+            }
+
+            return dm.user;
           }
 
-          return dm.user;
-        }
+          case "U":
+            return t;
 
-        case 'U':
-          return t;
-
-        // invalid input
-        case 'C':
-        case 'G':
-          return null;
-
-        // treat other target as user name
-        default: {
-          const user = this._dataStore.getUserByName(t.replace('@', ''));
-
-          if (!user) {
+          // invalid input
+          case "C":
+          case "G":
             return null;
+
+          // treat other target as user name
+          default: {
+            const user = this._dataStore.getUserByName(t.replace("@", ""));
+
+            if (!user) {
+              return null;
+            }
+
+            return user.id;
           }
-
-          return user.id;
         }
-      }
-    }).filter(user => user !== null);
+      })
+      .filter(user => user !== null);
 
-    return MPIM_PREFIX + userIds.join(',');
+    return MPIM_PREFIX + userIds.join(",");
   }
 }

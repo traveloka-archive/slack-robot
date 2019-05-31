@@ -1,5 +1,6 @@
-import uuid from 'uuid';
-import { stripEmoji } from './util';
+/* eslint no-underscore-dangle: 0 */
+import uuid from "uuid";
+import { stripEmoji } from "./util";
 
 export default class Listener {
   constructor(type, value, callback) {
@@ -9,7 +10,7 @@ export default class Listener {
     this.value = this._parseValue(type, value);
     this.matcher = this._createMatcher(this.value);
     this.callback = callback;
-    this.description = '';
+    this.description = "";
     this.acls = [];
   }
 
@@ -23,12 +24,13 @@ export default class Listener {
     return this;
   }
 
+  // eslint-disable-next-line class-methods-use-this
   _parseValue(type, value) {
     switch (type) {
-      case 'message':
+      case "message":
         return value;
-      case 'reaction_added':
-        return stripEmoji(value).replace('+', '\\+');
+      case "reaction_added":
+        return stripEmoji(value).replace("+", "\\+");
       default:
         return value;
     }
@@ -41,12 +43,14 @@ export default class Listener {
    * @param {?string|RegExp} value
    * @return {RegExp}
    */
+  // eslint-disable-next-line class-methods-use-this
   _createMatcher(value) {
     if (value instanceof RegExp) {
       return value;
     }
 
-    const expr = value.replace(/:[a-zA-Z]+\(([^\)]*)\)/g, '($1)');
+    // eslint-disable-next-line no-useless-escape
+    const expr = value.replace(/:[a-zA-Z]+\(([^\)]*)\)/g, "($1)");
     return new RegExp(`^${expr}$`);
   }
 }
