@@ -1,4 +1,4 @@
-# slack-robot [![Build Status](https://travis-ci.org/traveloka/slack-robot.svg)](https://travis-ci.org/traveloka/slack-robot) [![codecov.io](https://codecov.io/github/traveloka/slack-robot/coverage.svg?branch=master)](https://codecov.io/github/traveloka/slack-robot?branch=master) [![Package Version](http://img.shields.io/npm/v/slack-robot.svg)](https://www.npmjs.com/package/slack-robot)
+# slack-robot [![Build Status](https://travis-ci.org/vkonst/slack-robot.svg)](https://travis-ci.org/vkonst/slack-robot) [![codecov.io](https://codecov.io/github/vkonst/slack-robot/coverage.svg?branch=master)](https://codecov.io/github/vkonst/slack-robot?branch=master) [![Package Version](http://img.shields.io/npm/v/slack-robot.svg)](https://www.npmjs.com/package/slack-robot)
 > Simple robot for your slack integration
 
 `slack-robot` initially built to respond message from user with an action, then replying
@@ -216,7 +216,7 @@ robot.listen('deploy', function (req, res) {
 
       // use res.text like usual
       res.text('done, printing stdout:');
-      res.text(stdout);      
+      res.text(stdout);
       done();
     });
   // call .send() to send all previous response declared in asynchronous task

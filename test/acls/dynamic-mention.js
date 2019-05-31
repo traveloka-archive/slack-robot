@@ -8,6 +8,8 @@ import dynamicMention from '../../src/acls/dynamic-mention';
 chai.use(sinonChai);
 chai.should();
 
+const should = chai.should();
+
 describe('acls/dynamic-mention', () => {
   it('should skip mention for dm', () => {
     const next = sinon.spy();
@@ -24,7 +26,7 @@ describe('acls/dynamic-mention', () => {
     const res = {};
 
     dynamicMention(req, res, next);
-    next.should.be.calledOnce;
+    should.equal(next.calledOnce, true);
   });
 
   it('should need mention for group', () => {
@@ -42,7 +44,7 @@ describe('acls/dynamic-mention', () => {
     const res = {};
 
     dynamicMention(req, res, next);
-    next.should.notCalled;
+    should.equal(next.notCalled, true);
   });
 
   it('should need mention for channel', () => {
@@ -60,7 +62,7 @@ describe('acls/dynamic-mention', () => {
     const res = {};
 
     dynamicMention(req, res, next);
-    next.should.notCalled;
+    should.equal(next.notCalled, true);
   });
 
   it('should respond if mentioned in group', () => {
@@ -78,7 +80,7 @@ describe('acls/dynamic-mention', () => {
     const res = {};
 
     dynamicMention(req, res, next);
-    next.should.be.calledOnce;
+    should.equal(next.calledOnce, true);
   });
 
   it('should respond if mentioned in channel', () => {
@@ -96,6 +98,6 @@ describe('acls/dynamic-mention', () => {
     const res = {};
 
     dynamicMention(req, res, next);
-    next.should.be.calledOnce;
+    should.equal(next.calledOnce, true);
   });
 });

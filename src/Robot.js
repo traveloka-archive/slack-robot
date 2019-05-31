@@ -1,6 +1,6 @@
+/* eslint no-underscore-dangle: 0 */
+/* eslint consistent-return: 0 */
 import Log from 'log';
-import EventEmitter from 'eventemitter3';
-import Promise from 'bluebird';
 import { RtmClient, WebClient, CLIENT_EVENTS, RTM_EVENTS as MESSAGE_TYPE } from 'slack-client';
 import { MemoryDataStore } from 'slack-client/lib/data-store';
 import Listeners from './Listeners';
@@ -14,7 +14,9 @@ import {
   RESPONSE_EVENTS
 } from './Events';
 
-const logger = new Log('info');
+const EventEmitter = require('events');
+
+const logger = Log; // 'info' level by default
 const CLIENT_RTM_EVENTS = CLIENT_EVENTS.RTM;
 
 const DEFAULT_OPTIONS = {
@@ -372,7 +374,7 @@ export default class Robot extends EventEmitter {
       return;
     }
 
-    for (let i = 0; i < this._ignoredChannels.length; i++) {
+    for (let i = 0; i < this._ignoredChannels.length; i += 1) {
       if (message.to.name && this._ignoredChannels[i].indexOf(message.to.name) > -1) {
         this.emit(ROBOT_EVENTS.IGNORED_CHANNEL, message);
         return;
@@ -395,6 +397,7 @@ export default class Robot extends EventEmitter {
     });
   }
 
+  // eslint-disable-next-line no-shadow
   _checkListenerAcl(acls, request, response, callback) {
     const acl = acls[0];
 
@@ -452,7 +455,7 @@ export default class Robot extends EventEmitter {
    * @param {Object} message
    * @return {MessageQueue}
    */
-  _getQueueEntry(message) {
+  _getQueueEntry(message) { // eslint-disable-line class-methods-use-this
     switch (message.type) {
       case MESSAGE_TYPE.REACTION_ADDED:
         if (message.item.type === 'file') {
@@ -485,7 +488,7 @@ export default class Robot extends EventEmitter {
    * @param {Object} message
    */
   _processQueuedMessage(message) {
-    for (let i = 0; i < this._messageQueue.length; i++) {
+    for (let i = 0; i < this._messageQueue.length; i += 1) {
       const entry = this._messageQueue[i];
 
       // Else statement doesn't do anything anyway so it's not

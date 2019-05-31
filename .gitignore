@@ -1,6 +1,5 @@
 node_modules/
 coverage/
-.nyc_output/
 lib/
 npm-debug.log
-.tern-project
+.idea/

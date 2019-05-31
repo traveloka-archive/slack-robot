@@ -26,7 +26,7 @@ describe('plugins/help-generator', () => {
     listener.desc.returns(listener);
 
     helpGenerator({ enable: true })(robot);
-    robot.listen.should.be.calledOne;
+    should.equal(robot.listen.calledOnce, true);
     should.equal(robot.listen.getCall(0).args[0].test('help'), true);
     should.equal(robot.listen.getCall(0).args[0].test('help me'), true);
     should.equal(robot.listen.getCall(0).args[0].test('send me help'), true);
@@ -39,8 +39,8 @@ describe('plugins/help-generator', () => {
     };
 
     helpGenerator({ enable: false })(robot);
-    robot.listen.should.notCalled;
-    robot.removeListener.should.notCalled;
+    should.equal(robot.listen.notCalled, true);
+    should.equal(robot.removeListener.notCalled, true);
   });
 
   it('should remove existing listener if disabled', () => {
@@ -64,7 +64,7 @@ describe('plugins/help-generator', () => {
     helpGenerator({ enable: true })(robot);
     helpGenerator({ enable: false })(robot);
 
-    robot.listen.should.notCalled;
+    should.equal(robot.listen.calledOnce, true);
     robot.removeListener.should.be.calledWithExactly(5);
   });
 
@@ -94,7 +94,7 @@ describe('plugins/help-generator', () => {
       },
       {
         type: 'message',
-        value: 'deploy :branch([a-z\/\-]+) to :env([a-z]+)',
+        value: 'deploy :branch([a-z\/\-]+) to :env([a-z]+)',  // eslint-disable-line no-useless-escape
         description: ''
       },
       {
@@ -130,6 +130,6 @@ describe('plugins/help-generator', () => {
 
     helpGenerator({ enable: true })(robot);
     res.upload.should.be.calledWithExactly('command-list.txt', helpTextMock);
-    res.send.should.be.calledOnce;
+    should.equal(res.send.calledOnce, true);
   });
 });
