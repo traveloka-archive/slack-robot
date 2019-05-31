@@ -1,4 +1,4 @@
-import helpGenerator from './help-generator';
+import helpGenerator from "./help-generator";
 
 export default {
   helpGenerator

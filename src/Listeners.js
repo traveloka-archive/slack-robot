@@ -1,4 +1,5 @@
-import Listener from './Listener';
+/* eslint no-underscore-dangle: 0 */
+import Listener from "./Listener";
 
 export default class Listeners {
   constructor() {
@@ -28,7 +29,7 @@ export default class Listeners {
       return this._entries;
     }
 
-    for (let i = 0; i < this._entries.length; i++) {
+    for (let i = 0; i < this._entries.length; i += 1) {
       if (this._entries[i].id === id) {
         return this._entries[i];
       }
@@ -44,7 +45,7 @@ export default class Listeners {
    * @return {boolean}
    */
   remove(id) {
-    for (let i = 0; i < this._entries.length; i++) {
+    for (let i = 0; i < this._entries.length; i += 1) {
       if (this._entries[i].id === id) {
         this._entries.splice(i, 1);
         return true;
@@ -60,14 +61,14 @@ export default class Listeners {
    * @return {?Listener} listener
    */
   find(message) {
-    let value = '';
-    const type = message.type;
+    let value = "";
+    const { type } = message;
 
     switch (type) {
-      case 'message':
+      case "message":
         value = message.value.text;
         break;
-      case 'reaction_added':
+      case "reaction_added":
         value = message.value.emoji;
         break;
       default:
@@ -75,7 +76,7 @@ export default class Listeners {
 
     const entries = this._entries.filter(entry => entry.type === type);
 
-    for (let i = 0; i < entries.length; i++) {
+    for (let i = 0; i < entries.length; i += 1) {
       // get first entry, or first match
       if (!entries[i].matcher || value.match(entries[i].matcher)) {
         return entries[i];
